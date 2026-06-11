@@ -1,8 +1,12 @@
 {
   "version": "0.1.8",
   "tag": "v0.1.8",
+  "commit": "b65b9c8708ac7d5513e18ee258dfa292c8a941f5",
   "releaseUrl": "https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.8",
   "asset": "Hosts.Switch_0.1.8_aarch64.dmg",
+  "assetSha256": "72919ba41b7f0cbae8056e823cfe373221152384231255a1e0fc1c5e32c21ca5",
+  "assetSize": 3548045,
+  "sha256Asset": "dmg.sha256",
   "status": "pending",
   "tester": "",
   "date": "",

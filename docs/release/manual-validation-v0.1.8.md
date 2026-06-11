@@ -46,5 +46,6 @@ Result:
 Structured result:
 
 - Update `docs/release/manual-validation-v0.1.8.result.json` with the same outcome.
+- Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run verify:manual-result` to validate the result file.
 - Run `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1 npm run verify:manual-result` before promoting this prerelease to a production release.

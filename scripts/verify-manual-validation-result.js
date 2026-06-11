@@ -25,6 +25,7 @@ const requiredChecks = [
 
 const allowedStatuses = new Set(["pending", "pass", "fail"]);
 const sha256Pattern = /^[a-f0-9]{64}$/;
+const commitPattern = /^[a-f0-9]{40}$/;
 
 function fail(message) {
   console.error(`Manual validation result verification failed: ${message}`);
@@ -58,10 +59,47 @@ function assertOptionalSha256(value, label) {
   }
 }
 
+function assertSha256(value, label) {
+  if (typeof value !== "string" || !sha256Pattern.test(value)) {
+    fail(`${label} must be a lowercase SHA-256 digest`);
+  }
+}
+
+function assertCommit(value, label) {
+  if (typeof value !== "string" || !commitPattern.test(value)) {
+    fail(`${label} must be a lowercase 40-character git commit`);
+  }
+}
+
+function normalizeDigest(digest) {
+  if (typeof digest !== "string") {
+    return null;
+  }
+  return digest.startsWith("sha256:") ? digest.slice("sha256:".length) : digest;
+}
+
+function readOptionalReleaseJson() {
+  const raw = process.env.HOSTS_SWITCH_RELEASE_JSON;
+  if (!raw) {
+    return null;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    fail(`HOSTS_SWITCH_RELEASE_JSON is not valid JSON: ${error}`);
+  }
+}
+
 assertEqual(result.version, version, "result version");
 assertEqual(result.tag, tag, "result tag");
+assertCommit(result.commit, "result commit");
 assertEqual(result.releaseUrl, releaseUrl, "result release URL");
 assertEqual(result.asset, releaseAssetName, "result release asset");
+assertSha256(result.assetSha256, "result assetSha256");
+if (!Number.isInteger(result.assetSize) || result.assetSize <= 0) {
+  fail("result assetSize must be a positive integer");
+}
+assertEqual(result.sha256Asset, "dmg.sha256", "result sha256 asset");
 assertStatus(result.status, "result status");
 
 if (!checklist.includes(resultPath)) {
@@ -119,6 +157,26 @@ if (result.status !== "pending") {
 assertEqual(result.environment?.source, "release-asset", "environment source");
 assertOptionalSha256(result.hostsBeforeSha256, "hostsBeforeSha256");
 assertOptionalSha256(result.hostsAfterRestoredSha256, "hostsAfterRestoredSha256");
+
+const releaseJson = readOptionalReleaseJson();
+if (releaseJson) {
+  assertEqual(releaseJson.tagName, result.tag, "release JSON tag");
+  assertEqual(releaseJson.url, result.releaseUrl, "release JSON URL");
+  const assets = Array.isArray(releaseJson.assets) ? releaseJson.assets : [];
+  const releaseAsset = assets.find((asset) => asset.name === result.asset);
+  const shaAsset = assets.find((asset) => asset.name === result.sha256Asset);
+  if (!releaseAsset) {
+    fail(`release JSON is missing asset ${result.asset}`);
+  }
+  if (!shaAsset) {
+    fail(`release JSON is missing asset ${result.sha256Asset}`);
+  }
+  assertEqual(normalizeDigest(releaseAsset.digest), result.assetSha256, "release asset digest");
+  assertEqual(releaseAsset.size, result.assetSize, "release asset size");
+  if (releaseJson.body && !releaseJson.body.includes(result.assetSha256)) {
+    fail(`release body does not include digest ${result.assetSha256}`);
+  }
+}
 
 if (result.status === "pass" && result.hostsBeforeSha256 !== result.hostsAfterRestoredSha256) {
   fail("passing manual validation requires hostsBeforeSha256 to match hostsAfterRestoredSha256");
