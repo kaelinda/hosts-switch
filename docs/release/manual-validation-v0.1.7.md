@@ -1,20 +1,20 @@
-# Hosts Switch v0.1.6 Manual Validation
+# Hosts Switch v0.1.7 Manual Validation
 
 This checklist records the remaining packaged-app checks that intentionally require a real macOS session. Do not run these checks on a machine where changing `/etc/hosts`, login items, or global shortcuts would be unsafe.
 
 Release under test:
 
-- Tag: `v0.1.6`
-- Release asset: `Hosts.Switch_0.1.6_aarch64.dmg`
-- Local bundle name: `Hosts Switch_0.1.6_aarch64.dmg`
-- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.6>
+- Tag: `v0.1.7`
+- Release asset: `Hosts.Switch_0.1.7_aarch64.dmg`
+- Local bundle name: `Hosts Switch_0.1.7_aarch64.dmg`
+- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.7>
 
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
 - [ ] Save a copy of the current `/etc/hosts`.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
-- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.6_aarch64.dmg`.
+- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.7_aarch64.dmg`.
 
 Manual checks:
 
