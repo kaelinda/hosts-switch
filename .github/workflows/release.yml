@@ -55,7 +55,8 @@ jobs:
         run: |
           version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
           dmg_path="src-tauri/target/release/bundle/dmg/Hosts Switch_${version}_aarch64.dmg"
-          HOSTS_SWITCH_DMG_PATH="$dmg_path" npm run verify:release-version
+          release_asset_path="src-tauri/target/release/bundle/dmg/Hosts.Switch_${version}_aarch64.dmg"
+          HOSTS_SWITCH_DMG_PATH="$dmg_path" HOSTS_SWITCH_RELEASE_ASSET_PATH="$release_asset_path" npm run verify:release-version
         env:
           HOSTS_SWITCH_RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
@@ -68,13 +69,15 @@ jobs:
         run: |
           version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
           dmg_path="src-tauri/target/release/bundle/dmg/Hosts Switch_${version}_aarch64.dmg"
+          release_asset_path="src-tauri/target/release/bundle/dmg/Hosts.Switch_${version}_aarch64.dmg"
           if [[ ! -f "$dmg_path" ]]; then
             echo "Expected DMG artifact not found at $dmg_path" >&2
             exit 1
           fi
-          shasum -a 256 "$dmg_path" | tee dmg.sha256
-          echo "dmg_path=$dmg_path" >> "$GITHUB_OUTPUT"
-          echo "dmg_name=$(basename "$dmg_path")" >> "$GITHUB_OUTPUT"
+          cp "$dmg_path" "$release_asset_path"
+          shasum -a 256 "$release_asset_path" | tee dmg.sha256
+          echo "dmg_path=$release_asset_path" >> "$GITHUB_OUTPUT"
+          echo "dmg_name=$(basename "$release_asset_path")" >> "$GITHUB_OUTPUT"
           echo "sha256=$(awk '{print $1}' dmg.sha256)" >> "$GITHUB_OUTPUT"
 
       - name: Publish prerelease

@@ -89,6 +89,6 @@ Use `docs/release/manual-validation-v0.1.5.md` to record these checks. Run `npm 
 
 ## Distribution Notes
 
-GitHub release assets normalize spaces in the DMG filename, so the downloadable asset is named `Hosts.Switch_0.1.5_aarch64.dmg` even though the local Tauri bundle output is `Hosts Switch_0.1.5_aarch64.dmg`.
+The release workflow publishes `Hosts.Switch_0.1.5_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.5_aarch64.dmg`.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.

@@ -11,6 +11,7 @@ const readme = readFileSync("README.md", "utf8");
 const version = packageJson.version;
 const expectedTag = `v${version}`;
 const expectedDmgName = `Hosts Switch_${version}_aarch64.dmg`;
+const expectedReleaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const expectedReadmePath = `src-tauri/target/release/bundle/dmg/${expectedDmgName}`;
 
 function fail(message) {
@@ -54,6 +55,15 @@ if (dmgPath) {
   if (existsSync(localDmgPath)) {
     assertEqual(basename(localDmgPath), expectedDmgName, "local DMG artifact name");
   }
+}
+
+const releaseAssetPath = process.env.HOSTS_SWITCH_RELEASE_ASSET_PATH;
+if (releaseAssetPath) {
+  assertEqual(
+    basename(releaseAssetPath),
+    expectedReleaseAssetName,
+    "release asset artifact name",
+  );
 }
 
 console.log(`Verified release version ${version}`);
