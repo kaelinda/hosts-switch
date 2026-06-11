@@ -5,6 +5,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -19,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -57,13 +64,14 @@ jobs:
       - name: Publish prerelease
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           prerelease: true
           fail_on_unmatched_files: true
           files: |
             ${{ steps.artifact.outputs.dmg_path }}
             dmg.sha256
           body: |
-            Automated prerelease build for ${{ github.ref_name }}.
+            Automated prerelease build for ${{ inputs.tag || github.ref_name }}.
 
             Artifact:
             - ${{ steps.artifact.outputs.dmg_name }}
