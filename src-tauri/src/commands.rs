@@ -241,10 +241,15 @@ fn export_profiles_json(state: &AppState) -> CommandResult<String> {
 }
 
 fn import_profiles_raw(app: &AppHandle, raw: &str) -> CommandResult<AppState> {
-    let imported: AppState = serde_json::from_str(raw).map_err(CommandError::ImportJson)?;
+    let imported = parse_imported_profiles(raw)?;
     let saved = store::save_state(app, &imported)?;
     tray_switch::refresh_main_tray_menu(app);
     Ok(saved)
+}
+
+fn parse_imported_profiles(raw: &str) -> CommandResult<AppState> {
+    let imported: AppState = serde_json::from_str(raw).map_err(CommandError::ImportJson)?;
+    Ok(store::normalize_app_state(&imported))
 }
 
 fn pick_profile_export_path(app: &AppHandle) -> CommandResult<Option<PathBuf>> {
@@ -449,6 +454,15 @@ mod tests {
         let error = serde_json::from_str::<AppState>("{not json").map_err(CommandError::ImportJson);
 
         assert!(matches!(error, Err(CommandError::ImportJson(_))));
+    }
+
+    #[test]
+    fn imported_profiles_are_normalized_before_returning() {
+        let raw = serde_json::to_string(&state()).unwrap();
+        let imported = parse_imported_profiles(&raw).unwrap();
+
+        assert!(imported.groups[0].nodes[0].enabled);
+        assert!(!imported.groups[0].nodes[1].enabled);
     }
 
     #[test]
