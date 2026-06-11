@@ -47,6 +47,9 @@ jobs:
       - name: Build DMG
         run: npm run tauri:build:dmg -- --ci
 
+      - name: Verify macOS app bundle
+        run: npm run verify:bundle
+
       - name: Capture artifact metadata
         id: artifact
         shell: bash
