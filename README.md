@@ -36,6 +36,7 @@ If the administrator prompt is cancelled or the write fails, the saved active pr
 ```bash
 npm install
 npm run build
+npm run browser:smoke
 cargo test --manifest-path src-tauri/Cargo.toml --offline
 npm run tauri:build -- --ci
 ```

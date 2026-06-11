@@ -37,6 +37,12 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Install browser
+        run: npx playwright install chromium
+
+      - name: Browser smoke
+        run: npm run browser:smoke
+
       - name: Test Rust
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
