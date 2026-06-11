@@ -47,6 +47,7 @@ Result:
 Structured result:
 
 - Update `docs/release/manual-validation-v0.1.10.result.json` with the same outcome.
+- Prefer `npm run record:manual-result -- --check <check-id>=pass` when recording individual checks.
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.
 - Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.

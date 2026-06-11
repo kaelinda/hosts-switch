@@ -107,6 +107,10 @@ if (!readme.includes("npm run prepare:manual-validation")) {
   fail("README missing manual validation preparation command");
 }
 
+if (!readme.includes("npm run record:manual-result")) {
+  fail("README missing manual result recording command");
+}
+
 for (const requiredText of [localDmgName, releaseAssetName]) {
   if (!readme.includes(requiredText)) {
     fail(`README missing DMG name ${JSON.stringify(requiredText)}`);
@@ -118,6 +122,7 @@ for (const requiredText of [
   "Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`.",
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
+  "Prefer `npm run record:manual-result -- --check <check-id>=pass` when recording individual checks.",
   "Re-run `npm run prepare:manual-validation` and record `hostsAfterRestoredSha256`.",
   "Restore the original `/etc/hosts` if it was changed.",
   "Disable Launch at login if it was enabled only for testing.",
