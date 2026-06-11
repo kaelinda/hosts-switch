@@ -96,12 +96,12 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  npm run record:manual-result -- --check status-bar-open-editor=pass
-  npm run record:manual-result -- --status pass --tester "Name" --date 2026-06-12 --macos "macOS 15.5" --hardware "Apple Silicon"
+  npm run record:manual-result -- --check status-bar-open-editor=pass --check-note status-bar-open-editor="opened from status-bar icon"
+  npm run record:manual-result -- --status pass --tester "Name" --date 2026-06-12 --macos "macOS 15.5" --hardware "Apple Silicon" --hosts-before <sha256> --hosts-after <sha256>
 
 Options:
   --check <id=pass|fail|pending>        Set one manual check status. Repeatable.
-  --check-note <id=note>                Set notes for one manual check. Repeatable.
+  --check-note <id=note>                Set evidence notes for one manual check. Required for pass/fail checks. Repeatable.
   --status <pending|pass|fail>          Override the derived overall status.
   --tester <name>                       Tester name for non-pending results.
   --date <date>                         Validation date for non-pending results.
