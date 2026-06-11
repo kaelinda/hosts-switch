@@ -203,10 +203,19 @@ fn apply_with_admin_privileges(temp_path: &PathBuf) -> CommandResult<()> {
 }
 
 fn build_admin_apply_script(temp_path: &PathBuf) -> String {
-    format!(
-        "do shell script \"cp {} /etc/hosts && chmod 644 /etc/hosts && dscacheutil -flushcache && killall -HUP mDNSResponder\" with administrator privileges",
+    let shell_command = format!(
+        "cp {} /etc/hosts && chmod 644 /etc/hosts && dscacheutil -flushcache && killall -HUP mDNSResponder",
         shell_quote(&temp_path.to_string_lossy())
+    );
+
+    format!(
+        "do shell script {} with administrator privileges",
+        applescript_string_literal(&shell_command)
     )
+}
+
+fn applescript_string_literal(value: &str) -> String {
+    format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
 fn shell_quote(value: &str) -> String {
@@ -292,9 +301,18 @@ mod tests {
     fn admin_apply_script_quotes_paths_with_single_quotes() {
         let script = build_admin_apply_script(&PathBuf::from("/tmp/host's apply"));
 
-        assert!(script.contains("cp '/tmp/host'\\''s apply' /etc/hosts"));
+        assert!(script.contains("cp '/tmp/host'\\\\''s apply' /etc/hosts"));
         assert!(script.contains("dscacheutil -flushcache"));
         assert!(script.contains("killall -HUP mDNSResponder"));
+    }
+
+    #[test]
+    fn admin_apply_script_escapes_applescript_string_characters() {
+        let script = build_admin_apply_script(&PathBuf::from("/tmp/hosts\"switch\\apply"));
+
+        assert!(script.starts_with("do shell script \""));
+        assert!(script.contains("cp '/tmp/hosts\\\"switch\\\\apply' /etc/hosts"));
+        assert!(script.ends_with("\" with administrator privileges"));
     }
 
     #[test]
