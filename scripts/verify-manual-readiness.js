@@ -7,6 +7,7 @@ const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const version = packageJson.version;
 const tag = `v${version}`;
 const checklistPath = `docs/release/manual-validation-${tag}.md`;
+const resultPath = `docs/release/manual-validation-${tag}.result.json`;
 const releaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const localDmgName = `Hosts Switch_${version}_aarch64.dmg`;
 const localDmgPath = join("src-tauri", "target", "release", "bundle", "dmg", localDmgName);
@@ -178,6 +179,11 @@ assertIncludes(checklist, `Tag: \`${tag}\``, "manual checklist");
 assertIncludes(checklist, `Release asset: \`${releaseAssetName}\``, "manual checklist");
 assertIncludes(checklist, `Local bundle name: \`${localDmgName}\``, "manual checklist");
 assertIncludes(checklist, `https://github.com/kaelinda/hosts-switch/releases/tag/${tag}`, "manual checklist");
+assertIncludes(checklist, `Structured result: \`${resultPath}\``, "manual checklist");
+
+if (!existsSync(resultPath)) {
+  fail(`manual validation result not found at ${resultPath}`);
+}
 
 if (!existsSync(hostsPath)) {
   fail(`${hostsPath} does not exist`);
@@ -219,5 +225,6 @@ if (releaseJson) {
 }
 
 console.log(`Manual validation checklist: ${checklistPath}`);
+console.log(`Manual validation result: ${resultPath}`);
 console.log(`Suggested hosts backup path: ${backupSuggestion}`);
 console.log("Manual readiness verification is read-only and does not modify /etc/hosts");

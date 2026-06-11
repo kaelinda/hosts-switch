@@ -74,7 +74,8 @@ Current bundle outputs:
 
 ## Manual Release Checklist
 
-Use `docs/release/manual-validation-v0.1.8.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Use `docs/release/manual-validation-v0.1.8.md` and `docs/release/manual-validation-v0.1.8.result.json` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Run `npm run verify:manual-result` to validate the structured manual result, and run it with `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1` before promoting a prerelease to a production release.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 
 - Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.8_aarch64.dmg`.

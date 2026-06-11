@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "browser:smoke": "playwright test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",
+    "verify:manual-result": "node scripts/verify-manual-validation-result.js",
     "verify:manual-validation": "node scripts/verify-manual-validation-template.js",
     "verify:manual-readiness": "node scripts/verify-manual-readiness.js",
     "verify:manual-readiness:self-test": "node scripts/verify-manual-readiness.js --self-test",

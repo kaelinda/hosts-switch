@@ -4,6 +4,7 @@ const readme = readFileSync("README.md", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const version = packageJson.version;
 const templatePath = `docs/release/manual-validation-v${version}.md`;
+const resultPath = `docs/release/manual-validation-v${version}.result.json`;
 const localDmgName = `Hosts Switch_${version}_aarch64.dmg`;
 const releaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const template = readFileSync(templatePath, "utf8");
@@ -71,6 +72,7 @@ for (const requiredText of [
   `Release asset: \`${releaseAssetName}\``,
   `Local bundle name: \`${localDmgName}\``,
   `https://github.com/kaelinda/hosts-switch/releases/tag/v${version}`,
+  `Structured result: \`${resultPath}\``,
 ]) {
   if (!template.includes(requiredText)) {
     fail(`template missing version text ${JSON.stringify(requiredText)}`);
@@ -81,8 +83,16 @@ if (!readme.includes(templatePath)) {
   fail(`README missing manual validation template path ${templatePath}`);
 }
 
+if (!readme.includes(resultPath)) {
+  fail(`README missing manual validation result path ${resultPath}`);
+}
+
 if (!readme.includes("npm run verify:manual-readiness")) {
   fail("README missing manual readiness preflight command");
+}
+
+if (!readme.includes("npm run verify:manual-result")) {
+  fail("README missing manual result verification command");
 }
 
 for (const requiredText of [localDmgName, releaseAssetName]) {

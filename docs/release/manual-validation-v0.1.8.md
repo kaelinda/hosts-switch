@@ -8,6 +8,7 @@ Release under test:
 - Release asset: `Hosts.Switch_0.1.8_aarch64.dmg`
 - Local bundle name: `Hosts Switch_0.1.8_aarch64.dmg`
 - Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.8>
+- Structured result: `docs/release/manual-validation-v0.1.8.result.json`
 
 Before testing:
 
@@ -41,3 +42,9 @@ Result:
 - Date:
 - Outcome: `pass` / `fail`
 - Notes:
+
+Structured result:
+
+- Update `docs/release/manual-validation-v0.1.8.result.json` with the same outcome.
+- Run `npm run verify:manual-result` to validate the result file.
+- Run `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1 npm run verify:manual-result` before promoting this prerelease to a production release.

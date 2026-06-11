@@ -63,6 +63,9 @@ jobs:
       - name: Verify manual validation template
         run: npm run verify:manual-validation
 
+      - name: Verify manual validation result
+        run: npm run verify:manual-result
+
       - name: Verify manual readiness preflight
         run: npm run verify:manual-readiness
 
