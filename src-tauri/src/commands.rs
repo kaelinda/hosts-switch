@@ -15,8 +15,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 const MAX_PROFILE_IMPORT_BYTES: u64 = 1024 * 1024;
-const EMPTY_HOSTS_APPLY_MESSAGE: &str =
-    "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.";
+const EMPTY_HOSTS_APPLY_MESSAGE: &str = "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.";
 
 #[derive(Debug, Error)]
 pub enum CommandError {
@@ -185,9 +184,9 @@ pub fn restore_profiles_from_hosts(app: AppHandle) -> CommandResult<AppState> {
 #[tauri::command]
 pub fn restore_last_hosts_backup(app: AppHandle) -> CommandResult<String> {
     let backup = store::load_hosts_backup(&app)?;
-    write_temp_and_apply("restore-backup", &backup, apply_with_admin_privileges)?;
+    let message = restore_hosts_backup_with_io(&backup, apply_with_admin_privileges)?;
     tray_switch::refresh_main_tray_menu(&app);
-    Ok("Last hosts backup restored".to_string())
+    Ok(message)
 }
 
 fn write_temp_and_apply<F>(label: &str, content: &str, apply: F) -> CommandResult<()>
@@ -207,6 +206,25 @@ where
     let result = apply(&temp_path);
     let _ = fs::remove_file(&temp_path);
     result
+}
+
+fn ensure_non_empty_hosts_content(content: &str) -> CommandResult<()> {
+    if content.trim().is_empty() {
+        return Err(CommandError::Validation(
+            EMPTY_HOSTS_APPLY_MESSAGE.to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
+fn restore_hosts_backup_with_io<F>(backup: &str, apply: F) -> CommandResult<String>
+where
+    F: FnOnce(&PathBuf) -> CommandResult<()>,
+{
+    ensure_non_empty_hosts_content(backup)?;
+    write_temp_and_apply("restore-backup", backup, apply)?;
+    Ok("Last hosts backup restored".to_string())
 }
 
 fn apply_hosts_state_with_io<B, A, S>(
@@ -229,11 +247,7 @@ where
             issue.group_name, issue.node_name, issue.line_number, issue.message
         )));
     }
-    if current.trim().is_empty() {
-        return Err(CommandError::Validation(
-            EMPTY_HOSTS_APPLY_MESSAGE.to_string(),
-        ));
-    }
+    ensure_non_empty_hosts_content(&current)?;
 
     let next_hosts = merge_hosts_file(&current, &render_managed_block(&normalized))?;
     save_backup(&current)?;
@@ -622,6 +636,38 @@ mod tests {
             matches!(error, CommandError::Validation(message) if message == "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.")
         );
         assert!(calls.borrow().is_empty());
+    }
+
+    #[test]
+    fn restore_backup_rejects_empty_hosts_before_write() {
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let error = restore_hosts_backup_with_io(" \n\t", move |_| {
+            *called_apply.borrow_mut() = true;
+            Ok(())
+        })
+        .unwrap_err();
+
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.")
+        );
+        assert!(!*called.borrow());
+    }
+
+    #[test]
+    fn restore_backup_writes_non_empty_hosts_content() {
+        let observed = Rc::new(RefCell::new(None::<String>));
+        let observed_apply = Rc::clone(&observed);
+
+        let message = restore_hosts_backup_with_io("127.0.0.1 localhost\n", move |path| {
+            *observed_apply.borrow_mut() = Some(fs::read_to_string(path).unwrap());
+            Ok(())
+        })
+        .unwrap();
+
+        assert_eq!(message, "Last hosts backup restored");
+        assert_eq!(observed.borrow().as_deref(), Some("127.0.0.1 localhost\n"));
     }
 
     #[test]
