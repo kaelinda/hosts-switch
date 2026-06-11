@@ -73,3 +73,18 @@ test("browser demo recovers from a corrupted saved profile cache", async ({ page
   }, browserStoreKey);
   expect(stored?.groups?.[0]?.name).toBe("Development");
 });
+
+test("browser demo warns before applying when the hosts file is empty", async ({ page }) => {
+  await page.addInitScript((hostsKey) => {
+    window.localStorage.setItem(hostsKey, "");
+  }, browserHostsKey);
+
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "Hosts Switch" })).toBeVisible();
+  await expect(
+    page.getByText(
+      "Current /etc/hosts is empty. Confirm this machine is ready before applying changes.",
+    ),
+  ).toBeVisible();
+});

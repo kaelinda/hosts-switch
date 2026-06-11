@@ -102,6 +102,10 @@ function App() {
     (total, group) => total + group.nodes.filter((node) => node.enabled).length,
     0,
   );
+  const hostsWarnings = useMemo(
+    () => (snapshot ? describeHostsSnapshot(snapshot) : []),
+    [snapshot],
+  );
   const filteredGroups = useMemo(
     () => filterGroups(state.groups, profileSearch),
     [profileSearch, state.groups],
@@ -703,17 +707,25 @@ function App() {
         </div>
       </header>
 
-      <section className="statusline" data-error={Boolean(error)}>
-        <span>{error ?? status}</span>
-        <strong>
-          {isHoverPreviewing
-            ? "Hover preview"
-            : validationIssues.length > 0
-            ? `${validationIssues.length} validation error${validationIssues.length === 1 ? "" : "s"}`
-            : dirty
-              ? "Unsaved draft"
-              : "Saved"}
-        </strong>
+      <section className="status-stack">
+        <div className="statusline" data-error={Boolean(error)}>
+          <span>{error ?? status}</span>
+          <strong>
+            {isHoverPreviewing
+              ? "Hover preview"
+              : validationIssues.length > 0
+              ? `${validationIssues.length} validation error${validationIssues.length === 1 ? "" : "s"}`
+              : dirty
+                ? "Unsaved draft"
+                : "Saved"}
+          </strong>
+        </div>
+        {hostsWarnings.length > 0 ? (
+          <div className="hosts-alert" role="status">
+            <TriangleAlert size={15} />
+            <span>{hostsWarnings[0]}</span>
+          </div>
+        ) : null}
       </section>
 
       <section className="workspace">
@@ -980,6 +992,16 @@ function App() {
       ) : null}
     </main>
   );
+}
+
+function describeHostsSnapshot(snapshot: HostsSnapshot): string[] {
+  if (snapshot.current.trim().length === 0) {
+    return [
+      "Current /etc/hosts is empty. Confirm this machine is ready before applying changes.",
+    ];
+  }
+
+  return [];
 }
 
 export default App;

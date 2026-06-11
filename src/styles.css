@@ -105,6 +105,10 @@ button:disabled {
   color: #a33a2c;
 }
 
+.status-stack {
+  border-bottom: 1px solid #dce2e6;
+}
+
 .statusline {
   min-height: 34px;
   display: flex;
@@ -114,7 +118,6 @@ button:disabled {
   padding: 0 22px;
   background: #eef3f2;
   color: #38504a;
-  border-bottom: 1px solid #dce2e6;
   font-size: 13px;
 }
 
@@ -126,6 +129,22 @@ button:disabled {
 .statusline strong {
   font-size: 12px;
   font-weight: 640;
+}
+
+.hosts-alert {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px;
+  border-top: 1px solid #efd8aa;
+  background: #fff8e7;
+  color: #755513;
+  font-size: 12px;
+}
+
+.hosts-alert svg {
+  flex: 0 0 auto;
 }
 
 .workspace {
