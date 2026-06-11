@@ -46,6 +46,7 @@ const tauriConfig = JSON.parse(readFileSync("src-tauri/tauri.conf.json", "utf8")
 const defaultCapability = JSON.parse(readFileSync("src-tauri/capabilities/default.json", "utf8"));
 const generatedCapabilities = JSON.parse(readFileSync("src-tauri/gen/schemas/capabilities.json", "utf8"));
 const libRs = readFileSync("src-tauri/src/lib.rs", "utf8");
+const traySwitchRs = readFileSync("src-tauri/src/tray_switch.rs", "utf8");
 const apiTs = readFileSync("src/api.ts", "utf8");
 const cargoToml = readFileSync("src-tauri/Cargo.toml", "utf8");
 const info = JSON.parse(execFileSync("plutil", ["-convert", "json", "-o", "-", infoPlistPath], {
@@ -74,14 +75,40 @@ assertEqual(tauriConfig.app?.withGlobalTauri, false, "global Tauri API exposure"
 assertIncludes(fileInfo, "Mach-O", "Executable format");
 assertIncludes(fileInfo, "arm64", "Executable architecture");
 assertIncludes(libRs, "TrayIconBuilder::with_id(\"main\")", "Status-bar tray registration");
+assertIncludes(libRs, ".show_menu_on_left_click(false)", "Status-bar click behavior");
+assertIncludes(libRs, ".on_menu_event", "Status-bar menu event handler");
+assertIncludes(libRs, "tray_switch::handle_menu_event", "Status-bar menu dispatcher");
+assertIncludes(libRs, ".on_tray_icon_event", "Status-bar icon click handler");
+assertIncludes(libRs, "MouseButton::Left", "Status-bar left-click handling");
+assertIncludes(libRs, "tray_switch::show_main_window", "Status-bar editor opener");
 assertIncludes(libRs, "commands::apply_hosts", "Apply hosts command registration");
 assertIncludes(libRs, "commands::export_profiles_to_file", "Native export command registration");
 assertIncludes(libRs, "commands::import_profiles_from_file", "Native import command registration");
+assertIncludes(traySwitchRs, "const SWITCH_PREFIX: &str = \"switch-node:\"", "Status-bar switch menu IDs");
+assertIncludes(traySwitchRs, "commands::apply_hosts_state", "Status-bar switch apply path");
+assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
 assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command call");
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");
+assertIncludes(apiTs, "listen<TrayStatusEvent>(\"hosts-switch://tray-status\"", "Frontend tray status listener");
+assertIncludes(apiTs, "CommandOrControl+Shift+H", "Frontend global shortcut binding");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-fs", "Frontend dependency surface");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-dialog", "Frontend dependency surface");
 assertNotIncludes(cargoToml, "tauri-plugin-fs", "Direct Rust dependency surface");
+
+const requiredPermissions = [
+  "core:default",
+  "autostart:allow-enable",
+  "autostart:allow-disable",
+  "autostart:allow-is-enabled",
+  "global-shortcut:allow-is-registered",
+  "global-shortcut:allow-register",
+  "global-shortcut:allow-unregister",
+];
+for (const permission of requiredPermissions) {
+  if (!defaultCapability.permissions.includes(permission)) {
+    fail(`Default capability is missing ${permission}`);
+  }
+}
 
 const deniedPermissions = [
   "dialog:allow-open",
