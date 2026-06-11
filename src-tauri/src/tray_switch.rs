@@ -137,7 +137,7 @@ fn switch_node_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
         return;
     };
 
-    match switch_and_apply(app, group_id, node_id) {
+    match switch_and_apply(app, &group_id, &node_id) {
         Ok(state) => {
             refresh_menu(app, tray);
             emit_status(app, Some(state), "Hosts switched from status menu", None);
@@ -161,11 +161,25 @@ fn switch_and_apply(
     group_id: &str,
     node_id: &str,
 ) -> commands::CommandResult<AppState> {
-    let mut state = store::load_state(app)?;
+    let state = store::load_state(app)?;
+    switch_and_apply_loaded(state, group_id, node_id, |state| {
+        commands::apply_hosts_state(app, state)
+    })
+}
+
+fn switch_and_apply_loaded<F>(
+    mut state: AppState,
+    group_id: &str,
+    node_id: &str,
+    apply: F,
+) -> commands::CommandResult<AppState>
+where
+    F: FnOnce(AppState) -> commands::CommandResult<AppState>,
+{
     if !switch_node(&mut state, group_id, node_id) {
         return Ok(state);
     }
-    commands::apply_hosts_state(app, state)
+    apply(state)
 }
 
 fn load_state_for_menu(app: &AppHandle) -> AppState {
@@ -187,18 +201,25 @@ fn emit_status(app: &AppHandle, state: Option<AppState>, status: &str, error: Op
 }
 
 fn switch_item_id(group_id: &str, node_id: &str) -> String {
-    format!("{SWITCH_PREFIX}{group_id}:{node_id}")
+    format!("{SWITCH_PREFIX}{}:{group_id}{node_id}", group_id.len())
 }
 
-fn parse_switch_item_id(id: &str) -> Option<(&str, &str)> {
+fn parse_switch_item_id(id: &str) -> Option<(String, String)> {
     let rest = id.strip_prefix(SWITCH_PREFIX)?;
-    rest.split_once(':')
+    let (group_len_raw, payload) = rest.split_once(':')?;
+    let group_len = group_len_raw.parse::<usize>().ok()?;
+    let group_id = payload.get(..group_len)?.to_string();
+    let node_id = payload.get(group_len..)?.to_string();
+    Some((group_id, node_id))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::CommandError;
     use crate::models::{HostGroup, HostNode, Preferences};
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     fn state() -> AppState {
         AppState {
@@ -258,11 +279,60 @@ mod tests {
     }
 
     #[test]
+    fn applies_switched_state_after_status_menu_selection() {
+        let observed = Rc::new(RefCell::new(None::<AppState>));
+        let observed_apply = Rc::clone(&observed);
+
+        let result = switch_and_apply_loaded(state(), "g1", "n1", move |next| {
+            *observed_apply.borrow_mut() = Some(next.clone());
+            Ok(next)
+        })
+        .unwrap();
+
+        assert!(result.groups[0].nodes[0].enabled);
+        assert!(!result.groups[0].nodes[1].enabled);
+        assert_eq!(observed.borrow().clone().unwrap(), result);
+    }
+
+    #[test]
+    fn propagates_apply_failure_without_returning_switched_state() {
+        let error = switch_and_apply_loaded(state(), "g1", "n1", |_| {
+            Err(CommandError::Apply("cancelled".to_string()))
+        })
+        .unwrap_err();
+
+        assert!(matches!(error, CommandError::Apply(message) if message == "cancelled"));
+    }
+
+    #[test]
+    fn does_not_apply_unknown_status_menu_selection() {
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let result = switch_and_apply_loaded(state(), "g1", "missing", move |next| {
+            *called_apply.borrow_mut() = true;
+            Ok(next)
+        })
+        .unwrap();
+
+        assert!(!*called.borrow());
+        assert!(!result.groups[0].nodes[0].enabled);
+        assert!(result.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
     fn parses_switch_item_ids() {
+        let id = switch_item_id("group-a", "node-b");
         assert_eq!(
-            parse_switch_item_id("switch-node:group-a:node-b"),
-            Some(("group-a", "node-b"))
+            parse_switch_item_id(&id),
+            Some(("group-a".to_string(), "node-b".to_string()))
+        );
+        let id_with_separator = switch_item_id("group:a", "node:b");
+        assert_eq!(
+            parse_switch_item_id(&id_with_separator),
+            Some(("group:a".to_string(), "node:b".to_string()))
         );
         assert_eq!(parse_switch_item_id("show"), None);
+        assert_eq!(parse_switch_item_id("switch-node:9:short"), None);
     }
 }
