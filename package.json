@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "browser:smoke": "playwright test",
+    "sync:manual-release": "node scripts/sync-manual-release-metadata.js",
     "verify:bundle": "node scripts/verify-macos-bundle.js",
     "verify:manual-result": "node scripts/verify-manual-validation-result.js",
     "verify:manual-validation": "node scripts/verify-manual-validation-template.js",

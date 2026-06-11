@@ -95,6 +95,10 @@ if (!readme.includes("npm run verify:manual-result")) {
   fail("README missing manual result verification command");
 }
 
+if (!readme.includes("npm run sync:manual-release")) {
+  fail("README missing manual release metadata sync command");
+}
+
 for (const requiredText of [localDmgName, releaseAssetName]) {
   if (!readme.includes(requiredText)) {
     fail(`README missing DMG name ${JSON.stringify(requiredText)}`);
@@ -103,6 +107,7 @@ for (const requiredText of [localDmgName, releaseAssetName]) {
 
 for (const requiredText of [
   "Run `npm run verify:manual-readiness` and review its warnings.",
+  "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Save a copy of the current `/etc/hosts`.",
   "Restore the original `/etc/hosts` if it was changed.",
   "Disable Launch at login if it was enabled only for testing.",
