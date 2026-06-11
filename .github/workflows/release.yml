@@ -50,13 +50,23 @@ jobs:
       - name: Verify macOS app bundle
         run: npm run verify:bundle
 
+      - name: Verify release version metadata
+        shell: bash
+        run: |
+          version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+          dmg_path="src-tauri/target/release/bundle/dmg/Hosts Switch_${version}_aarch64.dmg"
+          HOSTS_SWITCH_DMG_PATH="$dmg_path" npm run verify:release-version
+        env:
+          HOSTS_SWITCH_RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
       - name: Capture artifact metadata
         id: artifact
         shell: bash
         run: |
-          dmg_path="$(find src-tauri/target/release/bundle/dmg -maxdepth 1 -name '*.dmg' -print -quit)"
-          if [[ -z "$dmg_path" ]]; then
-            echo "No DMG artifact found" >&2
+          version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+          dmg_path="src-tauri/target/release/bundle/dmg/Hosts Switch_${version}_aarch64.dmg"
+          if [[ ! -f "$dmg_path" ]]; then
+            echo "Expected DMG artifact not found at $dmg_path" >&2
             exit 1
           fi
           shasum -a 256 "$dmg_path" | tee dmg.sha256

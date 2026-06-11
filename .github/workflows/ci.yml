@@ -37,6 +37,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Verify release version metadata
+        run: npm run verify:release-version
+
       - name: Install browser
         run: npx playwright install chromium
 

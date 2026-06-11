@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "browser:smoke": "playwright test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",
+    "verify:release-version": "node scripts/verify-release-version.js",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
