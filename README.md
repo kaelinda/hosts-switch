@@ -55,6 +55,7 @@ Build release bundles:
 
 ```bash
 npm run tauri:build:dmg -- --ci
+npm run verify:dmg
 ```
 
 Current bundle outputs:
@@ -74,6 +75,8 @@ Current bundle outputs:
 - Native profile import/export commands are used from the frontend.
 - WebView capabilities do not grant dialog open/save or filesystem text-file permissions.
 - The frontend does not import Tauri dialog or filesystem plugins directly.
+
+`npm run verify:dmg` mounts the release DMG read-only, verifies the contained `Hosts Switch.app` metadata and arm64 executable, then detaches it. It does not launch the app or modify `/etc/hosts`.
 
 ## Manual Release Checklist
 

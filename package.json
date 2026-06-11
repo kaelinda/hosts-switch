@@ -14,6 +14,7 @@
     "record:manual-result": "node scripts/record-manual-validation-result.js",
     "record:manual-result:self-test": "node scripts/record-manual-validation-result.js --self-test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",
+    "verify:dmg": "node scripts/verify-dmg-contents.js",
     "verify:manual-result": "node scripts/verify-manual-validation-result.js",
     "verify:manual-recording-help": "node scripts/verify-manual-recording-help.js",
     "verify:manual-validation": "node scripts/verify-manual-validation-template.js",

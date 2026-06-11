@@ -50,6 +50,9 @@ jobs:
       - name: Verify macOS app bundle
         run: npm run verify:bundle
 
+      - name: Verify DMG contents
+        run: npm run verify:dmg
+
       - name: Verify release version metadata
         shell: bash
         run: |
