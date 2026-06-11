@@ -57,7 +57,7 @@ npm run tauri:build:dmg -- --ci
 Current bundle outputs:
 
 - `src-tauri/target/release/bundle/macos/Hosts Switch.app`
-- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.5_aarch64.dmg`
+- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.6_aarch64.dmg`
 
 ## Packaged App Verification
 
@@ -74,9 +74,9 @@ Current bundle outputs:
 
 ## Manual Release Checklist
 
-Use `docs/release/manual-validation-v0.1.5.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Use `docs/release/manual-validation-v0.1.6.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
 
-- Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.5_aarch64.dmg`.
+- Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.6_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
@@ -89,6 +89,6 @@ Use `docs/release/manual-validation-v0.1.5.md` to record these checks. Run `npm 
 
 ## Distribution Notes
 
-The release workflow publishes `Hosts.Switch_0.1.5_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.5_aarch64.dmg`.
+The release workflow publishes `Hosts.Switch_0.1.6_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.6_aarch64.dmg`.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.
