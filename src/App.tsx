@@ -137,7 +137,7 @@ function App() {
       return;
     }
     const timer = window.setTimeout(() => {
-      if (!hoverPreviewTarget) {
+      if (!hoverPreviewKeyRef.current) {
         void refreshPreview(state);
       }
       void refreshValidation(state);
@@ -357,7 +357,7 @@ function App() {
   }
 
   function clearHoverPreview() {
-    if (!hoverPreviewTarget) {
+    if (!hoverPreviewTarget && !hoverPreviewKeyRef.current) {
       return;
     }
     hoverPreviewKeyRef.current = null;
