@@ -1,6 +1,6 @@
 [package]
 name = "hosts-switch"
-version = "0.1.7"
+version = "0.1.8"
 description = "A macOS hosts profile switcher"
 authors = ["Hosts Switch Contributors"]
 edition = "2024"
