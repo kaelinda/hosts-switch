@@ -156,6 +156,18 @@ function requirePresent(value, label) {
   }
 }
 
+function requireCompletedCheckNotes(checks) {
+  for (const checkId of requiredChecks) {
+    const check = checks[checkId];
+    if (
+      check.status !== "pending" &&
+      (typeof check.notes !== "string" || check.notes.trim().length === 0)
+    ) {
+      fail(`check ${checkId} notes are required when status is ${check.status}`);
+    }
+  }
+}
+
 function verifyResult() {
   execFileSync("node", ["scripts/verify-manual-validation-result.js"], {
     stdio: "inherit",
@@ -236,6 +248,7 @@ function buildNextResult(result, options, readCurrentHostsSha256 = currentHostsS
     requirePresent(next.environment.macOS, "environment.macOS");
     requirePresent(next.environment.hardware, "environment.hardware");
   }
+  requireCompletedCheckNotes(next.checks);
 
   if (next.status === "pass" && next.hostsBeforeSha256 !== next.hostsAfterRestoredSha256) {
     fail("status pass requires hostsBeforeSha256 to equal hostsAfterRestoredSha256");
@@ -316,7 +329,7 @@ function runSelfTest() {
 
   const failed = buildNextResult(sampleResult(), {
     checks: [["managed-block-only", "fail"]],
-    checkNotes: [],
+    checkNotes: [["managed-block-only", "managed block changed unmanaged localhost"]],
     tester: "QA",
     date: "2026-06-12",
     macos: "macOS 15.5",
@@ -329,7 +342,7 @@ function runSelfTest() {
     sampleResult(),
     {
       checks: requiredChecks.map((checkId) => [checkId, "pass"]),
-      checkNotes: [],
+      checkNotes: requiredChecks.map((checkId) => [checkId, `${checkId} evidence`]),
       tester: "QA",
       date: "2026-06-12",
       macos: "macOS 15.5",
@@ -349,10 +362,17 @@ function runSelfTest() {
     }),
   );
 
+  expectThrows("completed check missing notes", () =>
+    buildNextResult(sampleResult(), {
+      checks: [["status-bar-open-editor", "pass"]],
+      checkNotes: [],
+    }),
+  );
+
   expectThrows("pass hash mismatch", () =>
     buildNextResult(sampleResult(), {
       checks: requiredChecks.map((checkId) => [checkId, "pass"]),
-      checkNotes: [],
+      checkNotes: requiredChecks.map((checkId) => [checkId, `${checkId} evidence`]),
       tester: "QA",
       date: "2026-06-12",
       macos: "macOS 15.5",

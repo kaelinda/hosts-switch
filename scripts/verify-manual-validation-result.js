@@ -146,6 +146,9 @@ for (const checkId of requiredChecks) {
   } else {
     pendingCount += 1;
   }
+  if (check.status !== "pending" && check.notes.trim().length === 0) {
+    fail(`check ${checkId} notes are required when status is ${check.status}`);
+  }
 }
 
 if (result.status === "pass" && (passCount !== requiredChecks.length || failCount > 0 || pendingCount > 0)) {
