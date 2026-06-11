@@ -181,10 +181,7 @@ where
 }
 
 fn apply_with_admin_privileges(temp_path: &PathBuf) -> CommandResult<()> {
-    let script = format!(
-        "do shell script \"cp {} /etc/hosts && chmod 644 /etc/hosts && dscacheutil -flushcache && killall -HUP mDNSResponder\" with administrator privileges",
-        shell_quote(&temp_path.to_string_lossy())
-    );
+    let script = build_admin_apply_script(temp_path);
 
     let output = Command::new("osascript")
         .arg("-e")
@@ -203,6 +200,13 @@ fn apply_with_admin_privileges(temp_path: &PathBuf) -> CommandResult<()> {
         let message = if stderr.is_empty() { stdout } else { stderr };
         Err(CommandError::Apply(message))
     }
+}
+
+fn build_admin_apply_script(temp_path: &PathBuf) -> String {
+    format!(
+        "do shell script \"cp {} /etc/hosts && chmod 644 /etc/hosts && dscacheutil -flushcache && killall -HUP mDNSResponder\" with administrator privileges",
+        shell_quote(&temp_path.to_string_lossy())
+    )
 }
 
 fn shell_quote(value: &str) -> String {
@@ -264,6 +268,33 @@ mod tests {
         let error = serde_json::from_str::<AppState>("{not json").map_err(CommandError::ImportJson);
 
         assert!(matches!(error, Err(CommandError::ImportJson(_))));
+    }
+
+    #[test]
+    fn builds_admin_apply_script_with_expected_commands() {
+        let script = build_admin_apply_script(&PathBuf::from("/tmp/hosts-switch-test"));
+
+        assert_eq!(
+            script,
+            "do shell script \"cp '/tmp/hosts-switch-test' /etc/hosts && chmod 644 /etc/hosts && dscacheutil -flushcache && killall -HUP mDNSResponder\" with administrator privileges"
+        );
+    }
+
+    #[test]
+    fn admin_apply_script_quotes_paths_with_spaces() {
+        let script = build_admin_apply_script(&PathBuf::from("/tmp/hosts switch/apply file"));
+
+        assert!(script.contains("cp '/tmp/hosts switch/apply file' /etc/hosts"));
+        assert!(script.ends_with(" with administrator privileges"));
+    }
+
+    #[test]
+    fn admin_apply_script_quotes_paths_with_single_quotes() {
+        let script = build_admin_apply_script(&PathBuf::from("/tmp/host's apply"));
+
+        assert!(script.contains("cp '/tmp/host'\\''s apply' /etc/hosts"));
+        assert!(script.contains("dscacheutil -flushcache"));
+        assert!(script.contains("killall -HUP mDNSResponder"));
     }
 
     #[test]
