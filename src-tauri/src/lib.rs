@@ -14,7 +14,6 @@ pub fn run() {
             None,
         ))
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             build_tray(app.handle())?;
@@ -24,7 +23,9 @@ pub fn run() {
             commands::load_app_state,
             commands::save_app_state,
             commands::export_profiles,
+            commands::export_profiles_to_file,
             commands::import_profiles,
+            commands::import_profiles_from_file,
             commands::read_hosts_snapshot,
             commands::preview_hosts,
             commands::validate_hosts_state,

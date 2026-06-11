@@ -7,11 +7,14 @@ use crate::store;
 use crate::tray_switch;
 use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::AppHandle;
+use tauri_plugin_dialog::{DialogExt, FilePath};
 use thiserror::Error;
 use uuid::Uuid;
+
+const MAX_PROFILE_IMPORT_BYTES: u64 = 1024 * 1024;
 
 #[derive(Debug, Error)]
 pub enum CommandError {
@@ -85,16 +88,47 @@ pub fn save_app_state(app: AppHandle, state: AppState) -> CommandResult<AppState
 
 #[tauri::command]
 pub fn export_profiles(state: AppState) -> CommandResult<String> {
-    let normalized = store::normalize_app_state(&state);
-    serde_json::to_string_pretty(&normalized).map_err(CommandError::Json)
+    export_profiles_json(&state)
+}
+
+#[tauri::command]
+pub async fn export_profiles_to_file(app: AppHandle, state: AppState) -> CommandResult<bool> {
+    let Some(path) = pick_profile_export_path(&app)? else {
+        return Ok(false);
+    };
+
+    export_profiles_to_path(&state, path)?;
+    Ok(true)
 }
 
 #[tauri::command]
 pub fn import_profiles(app: AppHandle, raw: String) -> CommandResult<AppState> {
-    let imported: AppState = serde_json::from_str(&raw).map_err(CommandError::ImportJson)?;
-    let saved = store::save_state(&app, &imported)?;
-    tray_switch::refresh_main_tray_menu(&app);
-    Ok(saved)
+    import_profiles_raw(&app, &raw)
+}
+
+#[tauri::command]
+pub async fn import_profiles_from_file(app: AppHandle) -> CommandResult<Option<AppState>> {
+    let Some(path) = pick_profile_import_path(&app)? else {
+        return Ok(None);
+    };
+
+    import_profiles_from_path(&app, path).map(Some)
+}
+
+fn export_profiles_to_path(state: &AppState, path: PathBuf) -> CommandResult<()> {
+    ensure_profile_json_path(&path)?;
+    let exported = export_profiles_json(state)?;
+    fs::write(&path, exported).map_err(|source| CommandError::IoWithPath { path, source })
+}
+
+fn import_profiles_from_path(app: &AppHandle, path: PathBuf) -> CommandResult<AppState> {
+    ensure_profile_json_path(&path)?;
+    ensure_profile_import_size(&path)?;
+    let raw = fs::read_to_string(&path).map_err(|source| CommandError::IoWithPath {
+        path: path.clone(),
+        source,
+    })?;
+    import_profiles_raw(app, &raw)
 }
 
 #[tauri::command]
@@ -178,6 +212,75 @@ where
     let result = apply(&temp_path);
     let _ = fs::remove_file(&temp_path);
     result
+}
+
+fn export_profiles_json(state: &AppState) -> CommandResult<String> {
+    let normalized = store::normalize_app_state(state);
+    serde_json::to_string_pretty(&normalized).map_err(CommandError::Json)
+}
+
+fn import_profiles_raw(app: &AppHandle, raw: &str) -> CommandResult<AppState> {
+    let imported: AppState = serde_json::from_str(raw).map_err(CommandError::ImportJson)?;
+    let saved = store::save_state(app, &imported)?;
+    tray_switch::refresh_main_tray_menu(app);
+    Ok(saved)
+}
+
+fn pick_profile_export_path(app: &AppHandle) -> CommandResult<Option<PathBuf>> {
+    app.dialog()
+        .file()
+        .set_title("Export Hosts Switch Profiles")
+        .set_file_name("hosts-switch-profiles.json")
+        .add_filter("Hosts Switch Profiles", &["json"])
+        .blocking_save_file()
+        .map(file_path_to_path)
+        .transpose()
+}
+
+fn pick_profile_import_path(app: &AppHandle) -> CommandResult<Option<PathBuf>> {
+    app.dialog()
+        .file()
+        .set_title("Import Hosts Switch Profiles")
+        .add_filter("Hosts Switch Profiles", &["json"])
+        .blocking_pick_file()
+        .map(file_path_to_path)
+        .transpose()
+}
+
+fn file_path_to_path(file_path: FilePath) -> CommandResult<PathBuf> {
+    file_path.into_path().map_err(|error| {
+        CommandError::Path(format!("failed to resolve selected file path: {error}"))
+    })
+}
+
+fn ensure_profile_json_path(path: &Path) -> CommandResult<()> {
+    if path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("json"))
+    {
+        return Ok(());
+    }
+
+    Err(CommandError::Validation(
+        "Profile files must use the .json extension.".to_string(),
+    ))
+}
+
+fn ensure_profile_import_size(path: &Path) -> CommandResult<()> {
+    let metadata = fs::metadata(path).map_err(|source| CommandError::IoWithPath {
+        path: path.to_path_buf(),
+        source,
+    })?;
+
+    if metadata.len() > MAX_PROFILE_IMPORT_BYTES {
+        return Err(CommandError::Validation(format!(
+            "Profile JSON must be smaller than {} bytes.",
+            MAX_PROFILE_IMPORT_BYTES
+        )));
+    }
+
+    Ok(())
 }
 
 fn apply_with_admin_privileges(temp_path: &PathBuf) -> CommandResult<()> {
@@ -270,6 +373,54 @@ mod tests {
         let parsed: AppState = serde_json::from_str(&exported).unwrap();
         assert!(parsed.groups[0].nodes[0].enabled);
         assert!(!parsed.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
+    fn writes_exported_profiles_to_selected_path() {
+        let path =
+            std::env::temp_dir().join(format!("hosts-switch-export-test-{}.json", Uuid::new_v4()));
+
+        export_profiles_to_path(&state(), path.clone()).unwrap();
+
+        let exported = fs::read_to_string(&path).unwrap();
+        let _ = fs::remove_file(&path);
+        let parsed: AppState = serde_json::from_str(&exported).unwrap();
+        assert_eq!(parsed.groups[0].nodes[0].name, "Local");
+        assert!(!parsed.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
+    fn rejects_profile_file_paths_without_json_extension() {
+        let path =
+            std::env::temp_dir().join(format!("hosts-switch-export-test-{}.txt", Uuid::new_v4()));
+
+        let error = export_profiles_to_path(&state(), path.clone()).unwrap_err();
+
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == "Profile files must use the .json extension.")
+        );
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn accepts_uppercase_json_profile_extension() {
+        let path = PathBuf::from("/tmp/HOSTS-SWITCH-PROFILES.JSON");
+
+        assert!(ensure_profile_json_path(&path).is_ok());
+    }
+
+    #[test]
+    fn rejects_profile_import_files_over_size_limit() {
+        let path =
+            std::env::temp_dir().join(format!("hosts-switch-import-test-{}.json", Uuid::new_v4()));
+        fs::write(&path, vec![b'a'; MAX_PROFILE_IMPORT_BYTES as usize + 1]).unwrap();
+
+        let error = ensure_profile_import_size(&path).unwrap_err();
+
+        let _ = fs::remove_file(&path);
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == "Profile JSON must be smaller than 1048576 bytes.")
+        );
     }
 
     #[test]

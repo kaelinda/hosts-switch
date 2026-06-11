@@ -5,8 +5,6 @@ import {
   enable as enableAutostart,
   isEnabled as isAutostartEnabled,
 } from "@tauri-apps/plugin-autostart";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import {
   isRegistered as isGlobalShortcutRegistered,
   register as registerGlobalShortcut,
@@ -35,7 +33,6 @@ const isTauri =
 
 export const runtimeLabel = isTauri ? "Tauri runtime" : "Browser demo";
 
-const profilesJsonFilter = [{ name: "Hosts Switch Profiles", extensions: ["json"] }];
 export const openEditorShortcut = "CommandOrControl+Shift+H";
 
 export type TrayStatusEvent = {
@@ -156,17 +153,7 @@ export async function exportProfilesToFile(state: AppState): Promise<boolean> {
     return false;
   }
 
-  const filePath = await save({
-    title: "Export Hosts Switch Profiles",
-    defaultPath: "hosts-switch-profiles.json",
-    filters: profilesJsonFilter,
-  });
-  if (!filePath) {
-    return false;
-  }
-
-  await writeTextFile(filePath, await exportProfiles(state));
-  return true;
+  return invoke<boolean>("export_profiles_to_file", { state });
 }
 
 export async function importProfilesFromFile(): Promise<AppState | null> {
@@ -174,16 +161,7 @@ export async function importProfilesFromFile(): Promise<AppState | null> {
     return null;
   }
 
-  const selected = await open({
-    title: "Import Hosts Switch Profiles",
-    multiple: false,
-    filters: profilesJsonFilter,
-  });
-  if (!selected || Array.isArray(selected)) {
-    return null;
-  }
-
-  return importProfiles(await readTextFile(selected));
+  return invoke<AppState | null>("import_profiles_from_file");
 }
 
 export async function readHostsSnapshot(state: AppState): Promise<HostsSnapshot> {
