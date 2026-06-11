@@ -78,6 +78,7 @@ Use `docs/release/manual-validation-v0.1.9.md` and `docs/release/manual-validati
 Run `npm run verify:manual-result` to validate the structured manual result, and run it with `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1` before promoting a prerelease to a production release.
 The structured result records the release asset SHA-256 and tag commit so manual validation remains tied to the exact DMG under test.
 After a prerelease is published, run `npm run sync:manual-release` to refresh those fields from GitHub before recording manual validation.
+Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.sha256`, release body, and structured result all agree.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 
 - Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.9_aarch64.dmg`.

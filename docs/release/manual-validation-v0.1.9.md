@@ -48,5 +48,6 @@ Structured result:
 - Update `docs/release/manual-validation-v0.1.9.result.json` with the same outcome.
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.
+- Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.
 - Run `npm run verify:manual-result` to validate the result file.
 - Run `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1 npm run verify:manual-result` before promoting this prerelease to a production release.
