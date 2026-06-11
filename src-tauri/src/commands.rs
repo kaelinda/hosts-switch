@@ -15,6 +15,8 @@ use thiserror::Error;
 use uuid::Uuid;
 
 const MAX_PROFILE_IMPORT_BYTES: u64 = 1024 * 1024;
+const EMPTY_HOSTS_APPLY_MESSAGE: &str =
+    "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.";
 
 #[derive(Debug, Error)]
 pub enum CommandError {
@@ -226,6 +228,11 @@ where
             "{} / {} line {}: {}",
             issue.group_name, issue.node_name, issue.line_number, issue.message
         )));
+    }
+    if current.trim().is_empty() {
+        return Err(CommandError::Validation(
+            EMPTY_HOSTS_APPLY_MESSAGE.to_string(),
+        ));
     }
 
     let next_hosts = merge_hosts_file(&current, &render_managed_block(&normalized))?;
@@ -582,6 +589,37 @@ mod tests {
 
         assert!(
             matches!(error, CommandError::Validation(message) if message.contains("Development / Local line 1"))
+        );
+        assert!(calls.borrow().is_empty());
+    }
+
+    #[test]
+    fn apply_flow_rejects_empty_hosts_before_backup_or_write() {
+        let calls = Rc::new(RefCell::new(Vec::<String>::new()));
+        let backup_calls = Rc::clone(&calls);
+        let apply_calls = Rc::clone(&calls);
+        let save_calls = Rc::clone(&calls);
+
+        let error = apply_hosts_state_with_io(
+            state(),
+            String::new(),
+            move |_| {
+                backup_calls.borrow_mut().push("backup".to_string());
+                Ok(())
+            },
+            move |_| {
+                apply_calls.borrow_mut().push("apply".to_string());
+                Ok(())
+            },
+            move |state| {
+                save_calls.borrow_mut().push("save".to_string());
+                Ok(state.clone())
+            },
+        )
+        .unwrap_err();
+
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.")
         );
         assert!(calls.borrow().is_empty());
     }

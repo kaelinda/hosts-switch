@@ -32,6 +32,8 @@ Everything outside that block is preserved. Applying changes reads the current `
 
 If the administrator prompt is cancelled or the write fails, the saved active profile state is not advanced.
 
+If the current `/etc/hosts` file is empty, Apply and status-bar switching are blocked before backup or write so the app does not replace a suspicious system hosts state.
+
 ## Development
 
 ```bash

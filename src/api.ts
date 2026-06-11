@@ -26,6 +26,8 @@ import type { AppState, HostsSnapshot, ValidationIssue } from "./types";
 const browserStoreKey = "hosts-switch.browser-state";
 const browserHostsKey = "hosts-switch.browser-hosts";
 const browserHostsBackupKey = "hosts-switch.browser-hosts-backup";
+const emptyHostsApplyMessage =
+  "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.";
 
 const isTauri =
   typeof window !== "undefined" &&
@@ -213,8 +215,12 @@ export async function applyHosts(state: AppState): Promise<AppState> {
     );
   }
 
-  const saved = await saveAppState(normalized);
   const currentHosts = browserHosts();
+  if (currentHosts.trim().length === 0) {
+    throw new Error(emptyHostsApplyMessage);
+  }
+
+  const saved = await saveAppState(normalized);
   window.localStorage.setItem(browserHostsBackupKey, currentHosts);
   window.localStorage.setItem(
     browserHostsKey,

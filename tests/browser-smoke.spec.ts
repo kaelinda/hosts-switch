@@ -87,4 +87,19 @@ test("browser demo warns before applying when the hosts file is empty", async ({
       "Current /etc/hosts is empty. Confirm this machine is ready before applying changes.",
     ),
   ).toBeVisible();
+
+  await page.getByRole("button", { name: /Local API/ }).click();
+  await page.getByRole("button", { name: "Inactive" }).click();
+  await page.getByRole("button", { name: "Apply" }).click();
+
+  await expect(
+    page.getByText(
+      "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.",
+    ),
+  ).toBeVisible();
+  const storedHosts = await page.evaluate(
+    (hostsKey) => window.localStorage.getItem(hostsKey),
+    browserHostsKey,
+  );
+  expect(storedHosts).toBe("");
 });
