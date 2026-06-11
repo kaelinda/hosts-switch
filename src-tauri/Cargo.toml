@@ -1,0 +1,24 @@
+[package]
+name = "hosts-switch"
+version = "0.1.0"
+description = "A macOS hosts profile switcher"
+authors = ["Hosts Switch Contributors"]
+edition = "2024"
+
+[lib]
+name = "hosts_switch_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.2", features = [] }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.11.2", features = ["tray-icon"] }
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-dialog = "2.7.1"
+tauri-plugin-fs = "2.5.1"
+tauri-plugin-global-shortcut = "2.3.2"
+thiserror = "2.0"
+uuid = { version = "1.19", features = ["v4", "serde"] }
