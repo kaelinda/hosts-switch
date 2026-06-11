@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri::AppHandle;
 use thiserror::Error;
+use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum CommandError {
@@ -164,8 +165,11 @@ fn write_temp_and_apply<F>(label: &str, content: &str, apply: F) -> CommandResul
 where
     F: FnOnce(&PathBuf) -> CommandResult<()>,
 {
-    let temp_path =
-        std::env::temp_dir().join(format!("hosts-switch-{}-{label}", std::process::id()));
+    let temp_path = std::env::temp_dir().join(format!(
+        "hosts-switch-{}-{label}-{}",
+        std::process::id(),
+        Uuid::new_v4()
+    ));
     fs::write(&temp_path, content).map_err(|source| CommandError::IoWithPath {
         path: temp_path.clone(),
         source,
@@ -294,5 +298,24 @@ mod tests {
         assert!(matches!(error, CommandError::Apply(message) if message == "cancelled"));
         let path = observed_path.borrow().clone().unwrap();
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn temp_apply_uses_unique_paths_for_repeated_writes() {
+        let observed_paths = Rc::new(RefCell::new(Vec::<PathBuf>::new()));
+
+        for _ in 0..2 {
+            let observed_apply = Rc::clone(&observed_paths);
+            write_temp_and_apply("test-unique", "127.0.0.1 local.test\n", move |path| {
+                observed_apply.borrow_mut().push(path.clone());
+                Ok(())
+            })
+            .unwrap();
+        }
+
+        let paths = observed_paths.borrow();
+        assert_eq!(paths.len(), 2);
+        assert_ne!(paths[0], paths[1]);
+        assert!(paths.iter().all(|path| !path.exists()));
     }
 }
