@@ -11,6 +11,7 @@
     "verify:bundle": "node scripts/verify-macos-bundle.js",
     "verify:manual-validation": "node scripts/verify-manual-validation-template.js",
     "verify:manual-readiness": "node scripts/verify-manual-readiness.js",
+    "verify:manual-readiness:self-test": "node scripts/verify-manual-readiness.js --self-test",
     "verify:release-version": "node scripts/verify-release-version.js",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

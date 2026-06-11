@@ -66,6 +66,9 @@ jobs:
       - name: Verify manual readiness preflight
         run: npm run verify:manual-readiness
 
+      - name: Test manual readiness preflight
+        run: npm run verify:manual-readiness:self-test
+
       - name: Capture artifact metadata
         id: artifact
         shell: bash

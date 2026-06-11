@@ -54,6 +54,79 @@ function listHostsSwitchProcesses() {
   }
 }
 
+function inspectHostsContent(hosts) {
+  const warnings = [];
+  const activeLines = hosts
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#"));
+
+  if (hosts.length === 0) {
+    warnings.push(`${hostsPath} is empty; confirm this is expected before testing hosts writes`);
+    return warnings;
+  }
+
+  if (activeLines.length === 0) {
+    warnings.push(`${hostsPath} has no active host entries after comments and blank lines`);
+  }
+
+  const hasLocalhost = activeLines.some((line) => /\blocalhost\b/i.test(line));
+  const hasIpv4Localhost = activeLines.some((line) => /^127\.0\.0\.1\s+.*\blocalhost\b/i.test(line));
+  const hasIpv6Localhost = activeLines.some((line) => /^::1\s+.*\blocalhost\b/i.test(line));
+
+  if (!hasLocalhost) {
+    warnings.push(`${hostsPath} does not contain an active localhost entry`);
+  } else if (!hasIpv4Localhost && !hasIpv6Localhost) {
+    warnings.push(`${hostsPath} contains localhost, but not on a common 127.0.0.1 or ::1 entry`);
+  }
+
+  return warnings;
+}
+
+function runSelfTest() {
+  const cases = [
+    {
+      name: "empty hosts warns",
+      hosts: "",
+      expected: ["is empty"],
+    },
+    {
+      name: "comment-only hosts warns",
+      hosts: "# comment\n\n",
+      expected: ["no active host entries", "does not contain an active localhost entry"],
+    },
+    {
+      name: "nonstandard localhost warns",
+      hosts: "10.0.0.2 localhost\n",
+      expected: ["not on a common 127.0.0.1 or ::1 entry"],
+    },
+    {
+      name: "standard localhost does not warn",
+      hosts: "127.0.0.1 localhost\n::1 localhost\n",
+      expected: [],
+    },
+  ];
+
+  for (const testCase of cases) {
+    const warnings = inspectHostsContent(testCase.hosts);
+    for (const expected of testCase.expected) {
+      if (!warnings.some((message) => message.includes(expected))) {
+        fail(`${testCase.name} missing warning ${JSON.stringify(expected)}`);
+      }
+    }
+    if (testCase.expected.length === 0 && warnings.length > 0) {
+      fail(`${testCase.name} expected no warnings, got ${warnings.join("; ")}`);
+    }
+  }
+
+  console.log(`Manual readiness self-test passed (${cases.length} cases)`);
+}
+
+if (process.argv.includes("--self-test")) {
+  runSelfTest();
+  process.exit(0);
+}
+
 if (!existsSync(checklistPath)) {
   fail(`manual checklist not found at ${checklistPath}`);
 }
@@ -71,6 +144,9 @@ if (!existsSync(hostsPath)) {
 try {
   const hosts = readFileSync(hostsPath, "utf8");
   console.log(`Read ${hostsPath}: ${hosts.length} bytes`);
+  for (const message of inspectHostsContent(hosts)) {
+    warn(message);
+  }
 } catch (error) {
   fail(`cannot read ${hostsPath}: ${error}`);
 }
