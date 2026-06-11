@@ -1,12 +1,12 @@
-# Hosts Switch v0.1.4 Manual Validation
+# Hosts Switch v0.1.5 Manual Validation
 
 This checklist records the remaining packaged-app checks that intentionally require a real macOS session. Do not run these checks on a machine where changing `/etc/hosts`, login items, or global shortcuts would be unsafe.
 
 Release under test:
 
-- Tag: `v0.1.4`
-- DMG: `Hosts.Switch_0.1.4_aarch64.dmg`
-- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.4>
+- Tag: `v0.1.5`
+- DMG: `Hosts Switch_0.1.5_aarch64.dmg`
+- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.5>
 
 Before testing:
 

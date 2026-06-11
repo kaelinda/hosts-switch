@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 
 const readme = readFileSync("README.md", "utf8");
-const template = readFileSync("docs/release/manual-validation-v0.1.4.md", "utf8");
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const version = packageJson.version;
+const templatePath = `docs/release/manual-validation-v${version}.md`;
+const template = readFileSync(templatePath, "utf8");
 
 const requiredChecks = [
   {
@@ -61,6 +64,21 @@ for (const check of requiredChecks) {
 }
 
 for (const requiredText of [
+  `# Hosts Switch v${version} Manual Validation`,
+  `Tag: \`v${version}\``,
+  `DMG: \`Hosts Switch_${version}_aarch64.dmg\``,
+  `https://github.com/kaelinda/hosts-switch/releases/tag/v${version}`,
+]) {
+  if (!template.includes(requiredText)) {
+    fail(`template missing version text ${JSON.stringify(requiredText)}`);
+  }
+}
+
+if (!readme.includes(templatePath)) {
+  fail(`README missing manual validation template path ${templatePath}`);
+}
+
+for (const requiredText of [
   "Save a copy of the current `/etc/hosts`.",
   "Restore the original `/etc/hosts` if it was changed.",
   "Disable Launch at login if it was enabled only for testing.",
@@ -70,4 +88,4 @@ for (const requiredText of [
   }
 }
 
-console.log(`Verified ${requiredChecks.length} manual validation checks`);
+console.log(`Verified ${requiredChecks.length} manual validation checks for ${version}`);
