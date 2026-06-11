@@ -10,6 +10,7 @@
     "browser:smoke": "playwright test",
     "sync:manual-release": "node scripts/sync-manual-release-metadata.js",
     "prepare:manual-validation": "node scripts/prepare-manual-validation.js",
+    "prepare:manual-validation:self-test": "node scripts/prepare-manual-validation.js --self-test",
     "record:manual-result": "node scripts/record-manual-validation-result.js",
     "record:manual-result:self-test": "node scripts/record-manual-validation-result.js --self-test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",

@@ -13,7 +13,7 @@ Release under test:
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
-- [ ] Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`.
+- [ ] Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`; if the command refuses an empty hosts file, restore or intentionally confirm the system hosts state before continuing.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
 - [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.11_aarch64.dmg`.
 

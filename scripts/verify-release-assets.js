@@ -97,6 +97,12 @@ if (!shaAssetDigest) {
 if (release.body && !release.body.includes(result.assetSha256)) {
   fail(`release body does not include digest ${result.assetSha256}`);
 }
+if (!release.body || !release.body.includes("## 中文版本说明")) {
+  fail("release body is missing the Chinese release notes heading");
+}
+if (!release.body.includes("真实 `/etc/hosts` 管理员写入")) {
+  fail("release body is missing the Chinese manual-validation warning");
+}
 
 const shaFile = downloadShaAsset();
 const [shaFileDigest, ...shaFilePathParts] = shaFile.split(/\s+/);

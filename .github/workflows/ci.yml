@@ -58,6 +58,9 @@ jobs:
       - name: Test manual readiness preflight
         run: npm run verify:manual-readiness:self-test
 
+      - name: Test manual validation preparation
+        run: npm run prepare:manual-validation:self-test
+
       - name: Install browser
         run: npx playwright install chromium
 
