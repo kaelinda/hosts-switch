@@ -57,7 +57,7 @@ npm run tauri:build:dmg -- --ci
 Current bundle outputs:
 
 - `src-tauri/target/release/bundle/macos/Hosts Switch.app`
-- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.9_aarch64.dmg`
+- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.10_aarch64.dmg`
 
 ## Packaged App Verification
 
@@ -74,14 +74,14 @@ Current bundle outputs:
 
 ## Manual Release Checklist
 
-Use `docs/release/manual-validation-v0.1.9.md` and `docs/release/manual-validation-v0.1.9.result.json` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Use `docs/release/manual-validation-v0.1.10.md` and `docs/release/manual-validation-v0.1.10.result.json` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
 Run `npm run verify:manual-result` to validate the structured manual result, and run it with `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1` before promoting a prerelease to a production release.
 The structured result records the release asset SHA-256 and tag commit so manual validation remains tied to the exact DMG under test.
 After a prerelease is published, run `npm run sync:manual-release` to refresh those fields from GitHub before recording manual validation.
 Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.sha256`, release body, and structured result all agree.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 
-- Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.9_aarch64.dmg`.
+- Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.10_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes, including the per-group No Active Node item.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
@@ -94,6 +94,6 @@ Run `npm run verify:manual-readiness` before touching the packaged app; it is re
 
 ## Distribution Notes
 
-The release workflow publishes `Hosts.Switch_0.1.9_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.9_aarch64.dmg`.
+The release workflow publishes `Hosts.Switch_0.1.10_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.10_aarch64.dmg`.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.

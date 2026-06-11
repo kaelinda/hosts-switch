@@ -280,7 +280,7 @@
 - Modify: `src-tauri/src/tray_switch.rs`
 - Modify: `README.md`
 - Modify: `docs/superpowers/specs/2026-06-11-hosts-switch-design.md`
-- Modify: `docs/release/manual-validation-v0.1.9.md`
+- Modify: `docs/release/manual-validation-v0.1.10.md`
 
 - [x] Add a per-group No Active Node item to the status-bar menu.
 - [x] Apply group disable through the same privileged hosts writer used by node switching.
