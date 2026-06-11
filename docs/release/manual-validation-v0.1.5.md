@@ -5,14 +5,15 @@ This checklist records the remaining packaged-app checks that intentionally requ
 Release under test:
 
 - Tag: `v0.1.5`
-- DMG: `Hosts Switch_0.1.5_aarch64.dmg`
+- Release asset: `Hosts.Switch_0.1.5_aarch64.dmg`
+- Local bundle name: `Hosts Switch_0.1.5_aarch64.dmg`
 - Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.5>
 
 Before testing:
 
 - [ ] Save a copy of the current `/etc/hosts`.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
-- [ ] Install or open the packaged app from the release DMG.
+- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.5_aarch64.dmg`.
 
 Manual checks:
 

@@ -4,6 +4,8 @@ const readme = readFileSync("README.md", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const version = packageJson.version;
 const templatePath = `docs/release/manual-validation-v${version}.md`;
+const localDmgName = `Hosts Switch_${version}_aarch64.dmg`;
+const releaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const template = readFileSync(templatePath, "utf8");
 
 const requiredChecks = [
@@ -66,7 +68,8 @@ for (const check of requiredChecks) {
 for (const requiredText of [
   `# Hosts Switch v${version} Manual Validation`,
   `Tag: \`v${version}\``,
-  `DMG: \`Hosts Switch_${version}_aarch64.dmg\``,
+  `Release asset: \`${releaseAssetName}\``,
+  `Local bundle name: \`${localDmgName}\``,
   `https://github.com/kaelinda/hosts-switch/releases/tag/v${version}`,
 ]) {
   if (!template.includes(requiredText)) {
@@ -76,6 +79,12 @@ for (const requiredText of [
 
 if (!readme.includes(templatePath)) {
   fail(`README missing manual validation template path ${templatePath}`);
+}
+
+for (const requiredText of [localDmgName, releaseAssetName]) {
+  if (!readme.includes(requiredText)) {
+    fail(`README missing DMG name ${JSON.stringify(requiredText)}`);
+  }
 }
 
 for (const requiredText of [

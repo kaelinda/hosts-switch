@@ -76,7 +76,7 @@ Current bundle outputs:
 
 Use `docs/release/manual-validation-v0.1.5.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
 
-- Open the packaged `.app` or install from the DMG.
+- Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.5_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
@@ -88,5 +88,7 @@ Use `docs/release/manual-validation-v0.1.5.md` to record these checks. Run `npm 
 - Restore the latest hosts backup only after intentionally testing Apply.
 
 ## Distribution Notes
+
+GitHub release assets normalize spaces in the DMG filename, so the downloadable asset is named `Hosts.Switch_0.1.5_aarch64.dmg` even though the local Tauri bundle output is `Hosts Switch_0.1.5_aarch64.dmg`.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.
