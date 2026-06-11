@@ -11,6 +11,7 @@ Release under test:
 
 Before testing:
 
+- [ ] Run `npm run verify:manual-readiness` and review its warnings.
 - [ ] Save a copy of the current `/etc/hosts`.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
 - [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.6_aarch64.dmg`.

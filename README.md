@@ -75,6 +75,7 @@ Current bundle outputs:
 ## Manual Release Checklist
 
 Use `docs/release/manual-validation-v0.1.6.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 
 - Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.6_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.

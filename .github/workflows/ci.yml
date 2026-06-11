@@ -43,6 +43,9 @@ jobs:
       - name: Verify manual validation template
         run: npm run verify:manual-validation
 
+      - name: Verify manual readiness preflight
+        run: npm run verify:manual-readiness
+
       - name: Install browser
         run: npx playwright install chromium
 
