@@ -61,7 +61,7 @@ Current bundle outputs:
 ## Manual Release Checklist
 
 - Open the packaged `.app` or install from the DMG.
-- Confirm the app runs as a status-bar utility.
+- Confirm the app launches as a status-bar utility without showing the editor window automatically.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
