@@ -48,3 +48,6 @@ jobs:
 
       - name: Build macOS app bundle
         run: npm run tauri:build -- --bundles app --ci
+
+      - name: Verify macOS app bundle
+        run: npm run verify:bundle

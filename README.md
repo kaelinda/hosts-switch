@@ -39,6 +39,7 @@ npm run build
 npm run browser:smoke
 cargo test --manifest-path src-tauri/Cargo.toml --offline
 npm run tauri:build -- --ci
+npm run verify:bundle
 ```
 
 Run the browser demo without touching the real hosts file:
