@@ -11,6 +11,7 @@
     "sync:manual-release": "node scripts/sync-manual-release-metadata.js",
     "prepare:manual-validation": "node scripts/prepare-manual-validation.js",
     "record:manual-result": "node scripts/record-manual-validation-result.js",
+    "record:manual-result:self-test": "node scripts/record-manual-validation-result.js --self-test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",
     "verify:manual-result": "node scripts/verify-manual-validation-result.js",
     "verify:manual-validation": "node scripts/verify-manual-validation-template.js",

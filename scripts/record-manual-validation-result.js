@@ -42,6 +42,7 @@ function parseArgs(argv) {
     setHostsBeforeCurrent: false,
     setHostsAfterCurrent: false,
     dryRun: false,
+    selfTest: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -80,6 +81,8 @@ function parseArgs(argv) {
       options.setHostsAfterCurrent = true;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
+    } else if (arg === "--self-test") {
+      options.selfTest = true;
     } else if (arg === "--help") {
       printHelp();
       process.exit(0);
@@ -110,6 +113,7 @@ Options:
   --set-hosts-after-current             Read current /etc/hosts and use its SHA-256 as hostsAfterRestoredSha256.
   --notes <text>                        Set top-level notes.
   --dry-run                             Print the updated JSON without writing.
+  --self-test                           Run script logic self-tests.
 `);
 }
 
@@ -158,86 +162,217 @@ function verifyResult() {
   });
 }
 
+function buildNextResult(result, options, readCurrentHostsSha256 = currentHostsSha256) {
+  if (result.version !== version || result.tag !== tag) {
+    fail(`manual result version/tag mismatch: ${result.version} ${result.tag}`);
+  }
+
+  const next = {
+    ...result,
+    environment: {
+      ...result.environment,
+    },
+    checks: Object.fromEntries(
+      requiredChecks.map((checkId) => [
+        checkId,
+        {
+          ...result.checks[checkId],
+        },
+      ]),
+    ),
+  };
+
+  for (const [checkId, status] of options.checks) {
+    assertCheckId(checkId);
+    assertStatus(status, `check ${checkId} status`);
+    next.checks[checkId].status = status;
+  }
+
+  for (const [checkId, note] of options.checkNotes) {
+    assertCheckId(checkId);
+    next.checks[checkId].notes = note;
+  }
+
+  if (options.status) {
+    assertStatus(options.status, "result status");
+    next.status = options.status;
+  } else {
+    next.status = deriveStatus(next.checks);
+  }
+
+  if (options.tester !== undefined) {
+    next.tester = options.tester;
+  }
+  if (options.date !== undefined) {
+    next.date = options.date;
+  }
+  if (options.macos !== undefined) {
+    next.environment.macOS = options.macos;
+  }
+  if (options.hardware !== undefined) {
+    next.environment.hardware = options.hardware;
+  }
+  if (options.hostsBeforeSha256 !== undefined) {
+    assertSha256(options.hostsBeforeSha256, "hostsBeforeSha256");
+    next.hostsBeforeSha256 = options.hostsBeforeSha256;
+  }
+  if (options.hostsAfterRestoredSha256 !== undefined) {
+    assertSha256(options.hostsAfterRestoredSha256, "hostsAfterRestoredSha256");
+    next.hostsAfterRestoredSha256 = options.hostsAfterRestoredSha256;
+  }
+  if (options.setHostsBeforeCurrent) {
+    next.hostsBeforeSha256 = readCurrentHostsSha256();
+  }
+  if (options.setHostsAfterCurrent) {
+    next.hostsAfterRestoredSha256 = readCurrentHostsSha256();
+  }
+  if (options.notes !== undefined) {
+    next.notes = options.notes;
+  }
+
+  if (next.status !== "pending") {
+    requirePresent(next.tester, "tester");
+    requirePresent(next.date, "date");
+    requirePresent(next.environment.macOS, "environment.macOS");
+    requirePresent(next.environment.hardware, "environment.hardware");
+  }
+
+  if (next.status === "pass" && next.hostsBeforeSha256 !== next.hostsAfterRestoredSha256) {
+    fail("status pass requires hostsBeforeSha256 to equal hostsAfterRestoredSha256");
+  }
+
+  return next;
+}
+
+function sampleResult() {
+  return {
+    version,
+    tag,
+    commit: "a".repeat(40),
+    releaseUrl: `https://github.com/kaelinda/hosts-switch/releases/tag/${tag}`,
+    asset: `Hosts.Switch_${version}_aarch64.dmg`,
+    assetSha256: "b".repeat(64),
+    assetSize: 1,
+    sha256Asset: "dmg.sha256",
+    status: "pending",
+    tester: "",
+    date: "",
+    environment: {
+      macOS: "",
+      hardware: "",
+      source: "release-asset",
+    },
+    hostsBeforeSha256: "",
+    hostsAfterRestoredSha256: "",
+    checks: Object.fromEntries(
+      requiredChecks.map((checkId) => [checkId, { status: "pending", notes: "" }]),
+    ),
+    notes: "",
+  };
+}
+
+function expectThrows(label, action) {
+  const originalExit = process.exit;
+  const originalError = console.error;
+  let failed = false;
+  process.exit = () => {
+    throw new Error("__expected_exit__");
+  };
+  console.error = () => {};
+  try {
+    action();
+  } catch (error) {
+    if (error.message === "__expected_exit__") {
+      failed = true;
+    } else {
+      throw error;
+    }
+  } finally {
+    process.exit = originalExit;
+    console.error = originalError;
+  }
+  if (!failed) {
+    fail(`${label} expected failure`);
+  }
+}
+
+function assertEqual(actual, expected, label) {
+  if (actual !== expected) {
+    fail(`${label} expected ${expected}, got ${actual}`);
+  }
+}
+
+function runSelfTest() {
+  const onePass = buildNextResult(sampleResult(), {
+    checks: [["status-bar-open-editor", "pass"]],
+    checkNotes: [["status-bar-open-editor", "opened from menu bar"]],
+  });
+  assertEqual(onePass.status, "pending", "one pass status");
+  assertEqual(
+    onePass.checks["status-bar-open-editor"].notes,
+    "opened from menu bar",
+    "check note",
+  );
+
+  const failed = buildNextResult(sampleResult(), {
+    checks: [["managed-block-only", "fail"]],
+    checkNotes: [],
+    tester: "QA",
+    date: "2026-06-12",
+    macos: "macOS 15.5",
+    hardware: "Apple Silicon",
+  });
+  assertEqual(failed.status, "fail", "failed status");
+
+  const digest = "c".repeat(64);
+  const allPass = buildNextResult(
+    sampleResult(),
+    {
+      checks: requiredChecks.map((checkId) => [checkId, "pass"]),
+      checkNotes: [],
+      tester: "QA",
+      date: "2026-06-12",
+      macos: "macOS 15.5",
+      hardware: "Apple Silicon",
+      hostsBeforeSha256: digest,
+      hostsAfterRestoredSha256: digest,
+    },
+    () => digest,
+  );
+  assertEqual(allPass.status, "pass", "all pass status");
+
+  expectThrows("missing tester", () =>
+    buildNextResult(sampleResult(), {
+      checks: [],
+      checkNotes: [],
+      status: "pass",
+    }),
+  );
+
+  expectThrows("pass hash mismatch", () =>
+    buildNextResult(sampleResult(), {
+      checks: requiredChecks.map((checkId) => [checkId, "pass"]),
+      checkNotes: [],
+      tester: "QA",
+      date: "2026-06-12",
+      macos: "macOS 15.5",
+      hardware: "Apple Silicon",
+      hostsBeforeSha256: "d".repeat(64),
+      hostsAfterRestoredSha256: "e".repeat(64),
+    }),
+  );
+
+  console.log("Manual result recording self-test passed");
+}
+
 const options = parseArgs(process.argv.slice(2));
+if (options.selfTest) {
+  runSelfTest();
+  process.exit(0);
+}
+
 const result = JSON.parse(readFileSync(resultPath, "utf8"));
-
-if (result.version !== version || result.tag !== tag) {
-  fail(`manual result version/tag mismatch: ${result.version} ${result.tag}`);
-}
-
-const next = {
-  ...result,
-  environment: {
-    ...result.environment,
-  },
-  checks: Object.fromEntries(
-    requiredChecks.map((checkId) => [
-      checkId,
-      {
-        ...result.checks[checkId],
-      },
-    ]),
-  ),
-};
-
-for (const [checkId, status] of options.checks) {
-  assertCheckId(checkId);
-  assertStatus(status, `check ${checkId} status`);
-  next.checks[checkId].status = status;
-}
-
-for (const [checkId, note] of options.checkNotes) {
-  assertCheckId(checkId);
-  next.checks[checkId].notes = note;
-}
-
-if (options.status) {
-  assertStatus(options.status, "result status");
-  next.status = options.status;
-} else {
-  next.status = deriveStatus(next.checks);
-}
-
-if (options.tester !== undefined) {
-  next.tester = options.tester;
-}
-if (options.date !== undefined) {
-  next.date = options.date;
-}
-if (options.macos !== undefined) {
-  next.environment.macOS = options.macos;
-}
-if (options.hardware !== undefined) {
-  next.environment.hardware = options.hardware;
-}
-if (options.hostsBeforeSha256 !== undefined) {
-  assertSha256(options.hostsBeforeSha256, "hostsBeforeSha256");
-  next.hostsBeforeSha256 = options.hostsBeforeSha256;
-}
-if (options.hostsAfterRestoredSha256 !== undefined) {
-  assertSha256(options.hostsAfterRestoredSha256, "hostsAfterRestoredSha256");
-  next.hostsAfterRestoredSha256 = options.hostsAfterRestoredSha256;
-}
-if (options.setHostsBeforeCurrent) {
-  next.hostsBeforeSha256 = currentHostsSha256();
-}
-if (options.setHostsAfterCurrent) {
-  next.hostsAfterRestoredSha256 = currentHostsSha256();
-}
-if (options.notes !== undefined) {
-  next.notes = options.notes;
-}
-
-if (next.status !== "pending") {
-  requirePresent(next.tester, "tester");
-  requirePresent(next.date, "date");
-  requirePresent(next.environment.macOS, "environment.macOS");
-  requirePresent(next.environment.hardware, "environment.hardware");
-}
-
-if (next.status === "pass" && next.hostsBeforeSha256 !== next.hostsAfterRestoredSha256) {
-  fail("status pass requires hostsBeforeSha256 to equal hostsAfterRestoredSha256");
-}
+const next = buildNextResult(result, options);
 
 const serialized = `${JSON.stringify(next, null, 2)}\n`;
 if (options.dryRun) {
