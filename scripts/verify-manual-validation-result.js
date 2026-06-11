@@ -92,15 +92,28 @@ function readOptionalReleaseJson() {
 
 assertEqual(result.version, version, "result version");
 assertEqual(result.tag, tag, "result tag");
-assertCommit(result.commit, "result commit");
 assertEqual(result.releaseUrl, releaseUrl, "result release URL");
 assertEqual(result.asset, releaseAssetName, "result release asset");
-assertSha256(result.assetSha256, "result assetSha256");
-if (!Number.isInteger(result.assetSize) || result.assetSize <= 0) {
-  fail("result assetSize must be a positive integer");
-}
 assertEqual(result.sha256Asset, "dmg.sha256", "result sha256 asset");
 assertStatus(result.status, "result status");
+
+if (result.status === "pending" && !process.env.HOSTS_SWITCH_RELEASE_JSON) {
+  if (typeof result.commit !== "string") {
+    fail("result commit must be a string");
+  }
+  if (typeof result.assetSha256 !== "string") {
+    fail("result assetSha256 must be a string");
+  }
+  if (!Number.isInteger(result.assetSize) || result.assetSize < 0) {
+    fail("result assetSize must be a non-negative integer");
+  }
+} else {
+  assertCommit(result.commit, "result commit");
+  assertSha256(result.assetSha256, "result assetSha256");
+  if (!Number.isInteger(result.assetSize) || result.assetSize <= 0) {
+    fail("result assetSize must be a positive integer");
+  }
+}
 
 if (!checklist.includes(resultPath)) {
   fail(`manual checklist must reference ${resultPath}`);

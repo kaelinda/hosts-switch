@@ -1,21 +1,21 @@
-# Hosts Switch v0.1.8 Manual Validation
+# Hosts Switch v0.1.9 Manual Validation
 
 This checklist records the remaining packaged-app checks that intentionally require a real macOS session. Do not run these checks on a machine where changing `/etc/hosts`, login items, or global shortcuts would be unsafe.
 
 Release under test:
 
-- Tag: `v0.1.8`
-- Release asset: `Hosts.Switch_0.1.8_aarch64.dmg`
-- Local bundle name: `Hosts Switch_0.1.8_aarch64.dmg`
-- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.8>
-- Structured result: `docs/release/manual-validation-v0.1.8.result.json`
+- Tag: `v0.1.9`
+- Release asset: `Hosts.Switch_0.1.9_aarch64.dmg`
+- Local bundle name: `Hosts Switch_0.1.9_aarch64.dmg`
+- Release: <https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.9>
+- Structured result: `docs/release/manual-validation-v0.1.9.result.json`
 
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
 - [ ] Save a copy of the current `/etc/hosts`.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
-- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.8_aarch64.dmg`.
+- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.9_aarch64.dmg`.
 
 Manual checks:
 
@@ -45,7 +45,7 @@ Result:
 
 Structured result:
 
-- Update `docs/release/manual-validation-v0.1.8.result.json` with the same outcome.
+- Update `docs/release/manual-validation-v0.1.9.result.json` with the same outcome.
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run verify:manual-result` to validate the result file.
 - Run `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1 npm run verify:manual-result` before promoting this prerelease to a production release.
