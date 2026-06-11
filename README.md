@@ -56,7 +56,7 @@ npm run tauri:build:dmg -- --ci
 Current bundle outputs:
 
 - `src-tauri/target/release/bundle/macos/Hosts Switch.app`
-- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.0_aarch64.dmg`
+- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.2_aarch64.dmg`
 
 ## Manual Release Checklist
 
