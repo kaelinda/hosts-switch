@@ -41,6 +41,36 @@ function readOptionalReleaseJson() {
   }
 }
 
+function normalizeDigest(digest) {
+  if (typeof digest !== "string") {
+    return null;
+  }
+  return digest.startsWith("sha256:") ? digest.slice("sha256:".length) : digest;
+}
+
+function inspectReleaseJson(releaseJson) {
+  if (releaseJson.tagName !== tag) {
+    fail(`release tag expected ${tag}, got ${releaseJson.tagName}`);
+  }
+  const assets = Array.isArray(releaseJson.assets) ? releaseJson.assets : [];
+  const releaseAsset = assets.find((asset) => asset.name === releaseAssetName);
+  const shaAsset = assets.find((asset) => asset.name === "dmg.sha256");
+  if (!releaseAsset) {
+    fail(`release JSON is missing asset ${releaseAssetName}`);
+  }
+  if (!shaAsset) {
+    fail("release JSON is missing asset dmg.sha256");
+  }
+  const releaseAssetDigest = normalizeDigest(releaseAsset.digest);
+  if (!releaseAssetDigest) {
+    fail(`release JSON asset ${releaseAssetName} is missing a sha256 digest`);
+  }
+  if (releaseJson.body && !releaseJson.body.includes(releaseAssetDigest)) {
+    fail(`release body does not include digest ${releaseAssetDigest}`);
+  }
+  return releaseAssetDigest;
+}
+
 function listHostsSwitchProcesses() {
   try {
     return execFileSync("pgrep", ["-fl", "Hosts Switch.app|MacOS/Hosts Switch|/hosts-switch($| )"], {
@@ -119,6 +149,18 @@ function runSelfTest() {
     }
   }
 
+  const digest = inspectReleaseJson({
+    tagName: tag,
+    body: "SHA-256: abc123",
+    assets: [
+      { name: releaseAssetName, digest: "sha256:abc123" },
+      { name: "dmg.sha256", digest: "sha256:def456" },
+    ],
+  });
+  if (digest !== "abc123") {
+    fail(`release JSON digest self-test expected abc123, got ${digest}`);
+  }
+
   console.log(`Manual readiness self-test passed (${cases.length} cases)`);
 }
 
@@ -171,19 +213,9 @@ if (existsSync(releaseAssetPath)) {
 
 const releaseJson = readOptionalReleaseJson();
 if (releaseJson) {
-  if (releaseJson.tagName !== tag) {
-    fail(`release tag expected ${tag}, got ${releaseJson.tagName}`);
-  }
-  const assets = Array.isArray(releaseJson.assets) ? releaseJson.assets : [];
-  const releaseAsset = assets.find((asset) => asset.name === releaseAssetName);
-  const shaAsset = assets.find((asset) => asset.name === "dmg.sha256");
-  if (!releaseAsset) {
-    fail(`release JSON is missing asset ${releaseAssetName}`);
-  }
-  if (!shaAsset) {
-    fail("release JSON is missing asset dmg.sha256");
-  }
+  const releaseAssetDigest = inspectReleaseJson(releaseJson);
   console.log(`Release asset found: ${releaseAssetName}`);
+  console.log(`Release asset digest: ${releaseAssetDigest}`);
 }
 
 console.log(`Manual validation checklist: ${checklistPath}`);
