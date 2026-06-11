@@ -80,6 +80,7 @@ The structured result records the release asset SHA-256 and tag commit so manual
 After a prerelease is published, run `npm run sync:manual-release` to refresh those fields from GitHub before recording manual validation.
 Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.sha256`, release body, and structured result all agree.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
+Run `npm run prepare:manual-validation` to print the current `/etc/hosts` SHA-256 and suggested backup path. Add `-- --write-backup` to copy `/etc/hosts` to that backup path before packaged-app testing.
 
 - Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.10_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes, including the per-group No Active Node item.

@@ -13,7 +13,7 @@ Release under test:
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
-- [ ] Save a copy of the current `/etc/hosts`.
+- [ ] Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
 - [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.10_aarch64.dmg`.
 
@@ -33,6 +33,7 @@ Manual checks:
 After testing:
 
 - [ ] Restore the original `/etc/hosts` if it was changed.
+- [ ] Re-run `npm run prepare:manual-validation` and record `hostsAfterRestoredSha256`.
 - [ ] Disable Launch at login if it was enabled only for testing.
 - [ ] Quit Hosts Switch.
 

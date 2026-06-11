@@ -103,6 +103,10 @@ if (!readme.includes("npm run verify:release-assets")) {
   fail("README missing release asset verification command");
 }
 
+if (!readme.includes("npm run prepare:manual-validation")) {
+  fail("README missing manual validation preparation command");
+}
+
 for (const requiredText of [localDmgName, releaseAssetName]) {
   if (!readme.includes(requiredText)) {
     fail(`README missing DMG name ${JSON.stringify(requiredText)}`);
@@ -111,9 +115,10 @@ for (const requiredText of [localDmgName, releaseAssetName]) {
 
 for (const requiredText of [
   "Run `npm run verify:manual-readiness` and review its warnings.",
+  "Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`.",
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
-  "Save a copy of the current `/etc/hosts`.",
+  "Re-run `npm run prepare:manual-validation` and record `hostsAfterRestoredSha256`.",
   "Restore the original `/etc/hosts` if it was changed.",
   "Disable Launch at login if it was enabled only for testing.",
 ]) {
