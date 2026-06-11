@@ -65,14 +65,7 @@ pub fn apply_hosts_state(app: &AppHandle, state: AppState) -> CommandResult<AppS
     })?;
     let next_hosts = merge_hosts_file(&current, &render_managed_block(&normalized))?;
     store::save_hosts_backup(app, &current)?;
-    let temp_path = std::env::temp_dir().join(format!("hosts-switch-{}-hosts", std::process::id()));
-    fs::write(&temp_path, next_hosts).map_err(|source| CommandError::IoWithPath {
-        path: temp_path.clone(),
-        source,
-    })?;
-
-    apply_with_admin_privileges(&temp_path)?;
-    let _ = fs::remove_file(&temp_path);
+    write_temp_and_apply("hosts", &next_hosts, apply_with_admin_privileges)?;
     let saved = store::save_state(app, &normalized)?;
     Ok(saved)
 }
@@ -162,19 +155,25 @@ pub fn restore_profiles_from_hosts(app: AppHandle) -> CommandResult<AppState> {
 #[tauri::command]
 pub fn restore_last_hosts_backup(app: AppHandle) -> CommandResult<String> {
     let backup = store::load_hosts_backup(&app)?;
-    let temp_path = std::env::temp_dir().join(format!(
-        "hosts-switch-{}-restore-backup",
-        std::process::id()
-    ));
-    fs::write(&temp_path, backup).map_err(|source| CommandError::IoWithPath {
+    write_temp_and_apply("restore-backup", &backup, apply_with_admin_privileges)?;
+    tray_switch::refresh_main_tray_menu(&app);
+    Ok("Last hosts backup restored".to_string())
+}
+
+fn write_temp_and_apply<F>(label: &str, content: &str, apply: F) -> CommandResult<()>
+where
+    F: FnOnce(&PathBuf) -> CommandResult<()>,
+{
+    let temp_path =
+        std::env::temp_dir().join(format!("hosts-switch-{}-{label}", std::process::id()));
+    fs::write(&temp_path, content).map_err(|source| CommandError::IoWithPath {
         path: temp_path.clone(),
         source,
     })?;
 
-    apply_with_admin_privileges(&temp_path)?;
+    let result = apply(&temp_path);
     let _ = fs::remove_file(&temp_path);
-    tray_switch::refresh_main_tray_menu(&app);
-    Ok("Last hosts backup restored".to_string())
+    result
 }
 
 fn apply_with_admin_privileges(temp_path: &PathBuf) -> CommandResult<()> {
@@ -210,6 +209,8 @@ fn shell_quote(value: &str) -> String {
 mod tests {
     use super::*;
     use crate::models::{HostGroup, HostNode, Preferences};
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     fn state() -> AppState {
         AppState {
@@ -259,5 +260,39 @@ mod tests {
         let error = serde_json::from_str::<AppState>("{not json").map_err(CommandError::ImportJson);
 
         assert!(matches!(error, Err(CommandError::ImportJson(_))));
+    }
+
+    #[test]
+    fn temp_apply_writes_content_and_cleans_up_after_success() {
+        let observed = Rc::new(RefCell::new(None::<(PathBuf, String)>));
+        let observed_apply = Rc::clone(&observed);
+
+        write_temp_and_apply("test-success", "127.0.0.1 local.test\n", move |path| {
+            let content = fs::read_to_string(path).unwrap();
+            *observed_apply.borrow_mut() = Some((path.clone(), content));
+            Ok(())
+        })
+        .unwrap();
+
+        let (path, content) = observed.borrow().clone().unwrap();
+        assert_eq!(content, "127.0.0.1 local.test\n");
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn temp_apply_cleans_up_after_admin_failure() {
+        let observed_path = Rc::new(RefCell::new(None::<PathBuf>));
+        let observed_apply = Rc::clone(&observed_path);
+
+        let error = write_temp_and_apply("test-failure", "127.0.0.1 local.test\n", move |path| {
+            assert!(path.exists());
+            *observed_apply.borrow_mut() = Some(path.clone());
+            Err(CommandError::Apply("cancelled".to_string()))
+        })
+        .unwrap_err();
+
+        assert!(matches!(error, CommandError::Apply(message) if message == "cancelled"));
+        let path = observed_path.borrow().clone().unwrap();
+        assert!(!path.exists());
     }
 }
