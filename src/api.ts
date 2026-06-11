@@ -53,7 +53,13 @@ export async function loadAppState(): Promise<AppState> {
     return state;
   }
 
-  return normalizeState(JSON.parse(stored) as AppState);
+  try {
+    return normalizeState(JSON.parse(stored) as AppState);
+  } catch {
+    const state = defaultAppState();
+    window.localStorage.setItem(browserStoreKey, JSON.stringify(state));
+    return state;
+  }
 }
 
 export async function saveAppState(state: AppState): Promise<AppState> {

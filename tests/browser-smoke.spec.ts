@@ -56,3 +56,20 @@ test("browser demo covers safe hosts switching without touching /etc/hosts", asy
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.locator(".profile-json")).toContainText("\"groups\"");
 });
+
+test("browser demo recovers from a corrupted saved profile cache", async ({ page }) => {
+  await page.addInitScript((storeKey) => {
+    window.localStorage.setItem(storeKey, "{not valid json");
+  }, browserStoreKey);
+
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "Hosts Switch" })).toBeVisible();
+  await expect(page.getByText("Development")).toBeVisible();
+
+  const stored = await page.evaluate((storeKey) => {
+    const raw = window.localStorage.getItem(storeKey);
+    return raw ? JSON.parse(raw) : null;
+  }, browserStoreKey);
+  expect(stored?.groups?.[0]?.name).toBe("Development");
+});
