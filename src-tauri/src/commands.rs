@@ -54,24 +54,17 @@ impl Serialize for CommandError {
 pub type CommandResult<T> = Result<T, CommandError>;
 
 pub fn apply_hosts_state(app: &AppHandle, state: AppState) -> CommandResult<AppState> {
-    let normalized = store::normalize_app_state(&state);
-    let issues = validate_state(&normalized);
-    if let Some(issue) = issues.first() {
-        return Err(CommandError::Validation(format!(
-            "{} / {} line {}: {}",
-            issue.group_name, issue.node_name, issue.line_number, issue.message
-        )));
-    }
-
     let current = fs::read_to_string(hosts_path()).map_err(|source| CommandError::IoWithPath {
         path: PathBuf::from(hosts_path()),
         source,
     })?;
-    let next_hosts = merge_hosts_file(&current, &render_managed_block(&normalized))?;
-    store::save_hosts_backup(app, &current)?;
-    write_temp_and_apply("hosts", &next_hosts, apply_with_admin_privileges)?;
-    let saved = store::save_state(app, &normalized)?;
-    Ok(saved)
+    apply_hosts_state_with_io(
+        state,
+        current,
+        |current| store::save_hosts_backup(app, current).map(|_| ()),
+        apply_with_admin_privileges,
+        |normalized| store::save_state(app, normalized),
+    )
 }
 
 #[tauri::command]
@@ -212,6 +205,34 @@ where
     let result = apply(&temp_path);
     let _ = fs::remove_file(&temp_path);
     result
+}
+
+fn apply_hosts_state_with_io<B, A, S>(
+    state: AppState,
+    current: String,
+    save_backup: B,
+    apply: A,
+    save_state: S,
+) -> CommandResult<AppState>
+where
+    B: FnOnce(&str) -> CommandResult<()>,
+    A: FnOnce(&PathBuf) -> CommandResult<()>,
+    S: FnOnce(&AppState) -> CommandResult<AppState>,
+{
+    let normalized = store::normalize_app_state(&state);
+    let issues = validate_state(&normalized);
+    if let Some(issue) = issues.first() {
+        return Err(CommandError::Validation(format!(
+            "{} / {} line {}: {}",
+            issue.group_name, issue.node_name, issue.line_number, issue.message
+        )));
+    }
+
+    let next_hosts = merge_hosts_file(&current, &render_managed_block(&normalized))?;
+    save_backup(&current)?;
+    write_temp_and_apply("hosts", &next_hosts, apply)?;
+    let saved = save_state(&normalized)?;
+    Ok(saved)
 }
 
 fn export_profiles_json(state: &AppState) -> CommandResult<String> {
@@ -428,6 +449,127 @@ mod tests {
         let error = serde_json::from_str::<AppState>("{not json").map_err(CommandError::ImportJson);
 
         assert!(matches!(error, Err(CommandError::ImportJson(_))));
+    }
+
+    #[test]
+    fn apply_flow_writes_only_managed_block_and_saves_after_success() {
+        let calls = Rc::new(RefCell::new(Vec::<String>::new()));
+        let observed_backup = Rc::new(RefCell::new(None::<String>));
+        let observed_hosts = Rc::new(RefCell::new(None::<String>));
+        let observed_saved = Rc::new(RefCell::new(None::<AppState>));
+
+        let backup_calls = Rc::clone(&calls);
+        let backup_content = Rc::clone(&observed_backup);
+        let apply_calls = Rc::clone(&calls);
+        let applied_hosts = Rc::clone(&observed_hosts);
+        let save_calls = Rc::clone(&calls);
+        let saved_state = Rc::clone(&observed_saved);
+
+        let current = [
+            "127.0.0.1 localhost",
+            "",
+            "# >>> Hosts Switch managed block",
+            "10.0.0.1 old.local.test",
+            "# <<< Hosts Switch managed block",
+            "",
+            "192.0.2.10 unmanaged.local",
+            "",
+        ]
+        .join("\n");
+
+        let saved = apply_hosts_state_with_io(
+            state(),
+            current.clone(),
+            move |content| {
+                backup_calls.borrow_mut().push("backup".to_string());
+                *backup_content.borrow_mut() = Some(content.to_string());
+                Ok(())
+            },
+            move |path| {
+                apply_calls.borrow_mut().push("apply".to_string());
+                *applied_hosts.borrow_mut() = Some(fs::read_to_string(path).unwrap());
+                Ok(())
+            },
+            move |state| {
+                save_calls.borrow_mut().push("save".to_string());
+                *saved_state.borrow_mut() = Some(state.clone());
+                Ok(state.clone())
+            },
+        )
+        .unwrap();
+
+        assert_eq!(*calls.borrow(), vec!["backup", "apply", "save"]);
+        assert_eq!(observed_backup.borrow().as_deref(), Some(current.as_str()));
+        let applied = observed_hosts.borrow().clone().unwrap();
+        assert!(applied.contains("127.0.0.1 localhost"));
+        assert!(applied.contains("127.0.0.1 local.test"));
+        assert!(applied.contains("192.0.2.10 unmanaged.local"));
+        assert!(!applied.contains("10.0.0.1 old.local.test"));
+        assert_eq!(observed_saved.borrow().as_ref().unwrap(), &saved);
+        assert!(saved.groups[0].nodes[0].enabled);
+        assert!(!saved.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
+    fn apply_flow_does_not_save_profile_after_admin_cancel() {
+        let calls = Rc::new(RefCell::new(Vec::<String>::new()));
+        let backup_calls = Rc::clone(&calls);
+        let apply_calls = Rc::clone(&calls);
+        let save_calls = Rc::clone(&calls);
+
+        let error = apply_hosts_state_with_io(
+            state(),
+            "127.0.0.1 localhost\n".to_string(),
+            move |_| {
+                backup_calls.borrow_mut().push("backup".to_string());
+                Ok(())
+            },
+            move |_| {
+                apply_calls.borrow_mut().push("apply".to_string());
+                Err(CommandError::Apply("User canceled.".to_string()))
+            },
+            move |state| {
+                save_calls.borrow_mut().push("save".to_string());
+                Ok(state.clone())
+            },
+        )
+        .unwrap_err();
+
+        assert!(matches!(error, CommandError::Apply(message) if message == "User canceled."));
+        assert_eq!(*calls.borrow(), vec!["backup", "apply"]);
+    }
+
+    #[test]
+    fn apply_flow_rejects_invalid_enabled_hosts_before_backup_or_write() {
+        let mut invalid = state();
+        invalid.groups[0].nodes[0].content = "not-an-ip local.test".to_string();
+        let calls = Rc::new(RefCell::new(Vec::<String>::new()));
+        let backup_calls = Rc::clone(&calls);
+        let apply_calls = Rc::clone(&calls);
+        let save_calls = Rc::clone(&calls);
+
+        let error = apply_hosts_state_with_io(
+            invalid,
+            "127.0.0.1 localhost\n".to_string(),
+            move |_| {
+                backup_calls.borrow_mut().push("backup".to_string());
+                Ok(())
+            },
+            move |_| {
+                apply_calls.borrow_mut().push("apply".to_string());
+                Ok(())
+            },
+            move |state| {
+                save_calls.borrow_mut().push("save".to_string());
+                Ok(state.clone())
+            },
+        )
+        .unwrap_err();
+
+        assert!(
+            matches!(error, CommandError::Validation(message) if message.contains("Development / Local line 1"))
+        );
+        assert!(calls.borrow().is_empty());
     }
 
     #[test]
