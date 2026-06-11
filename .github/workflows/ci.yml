@@ -40,6 +40,9 @@ jobs:
       - name: Verify release version metadata
         run: npm run verify:release-version
 
+      - name: Verify manual validation template
+        run: npm run verify:manual-validation
+
       - name: Install browser
         run: npx playwright install chromium
 

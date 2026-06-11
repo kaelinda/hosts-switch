@@ -74,6 +74,8 @@ Current bundle outputs:
 
 ## Manual Release Checklist
 
+Use `docs/release/manual-validation-v0.1.4.md` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+
 - Open the packaged `.app` or install from the DMG.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
