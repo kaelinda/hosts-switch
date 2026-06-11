@@ -46,6 +46,7 @@ import {
   syncLaunchAtLoginPreference,
   validateHostsState,
 } from "./api";
+import { hydrateGlobalShortcutPreference } from "./systemPreferenceHydration";
 import type {
   AppState,
   HostGroup,
@@ -180,34 +181,12 @@ function App() {
   }
 
   async function hydrateGlobalShortcutStatus(loaded: AppState) {
-    let actual: boolean | null = null;
-    try {
-      actual = await readGlobalShortcutStatus();
-    } catch (reason) {
-      setError(String(reason));
-      setStatus("Could not read global shortcut status");
-    }
-    if (actual === null || actual === loaded.preferences.enableGlobalShortcut) {
-      if (loaded.preferences.enableGlobalShortcut) {
-        try {
-          const registered = await syncGlobalShortcutPreference(loaded);
-          if (registered) {
-            return loaded;
-          }
-        } catch (reason) {
-          setError(String(reason));
-          setStatus("Could not register global shortcut");
-        }
-      }
-      return loaded;
-    }
-
-    return saveAppState({
-      ...loaded,
-      preferences: {
-        ...loaded.preferences,
-        enableGlobalShortcut: actual,
-      },
+    return hydrateGlobalShortcutPreference(loaded, {
+      readStatus: readGlobalShortcutStatus,
+      syncPreference: syncGlobalShortcutPreference,
+      saveState: saveAppState,
+      reportError: setError,
+      reportStatus: setStatus,
     });
   }
 

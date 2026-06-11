@@ -48,6 +48,8 @@ const generatedCapabilities = JSON.parse(readFileSync("src-tauri/gen/schemas/cap
 const libRs = readFileSync("src-tauri/src/lib.rs", "utf8");
 const traySwitchRs = readFileSync("src-tauri/src/tray_switch.rs", "utf8");
 const apiTs = readFileSync("src/api.ts", "utf8");
+const appTsx = readFileSync("src/App.tsx", "utf8");
+const systemPreferenceHydrationTs = readFileSync("src/systemPreferenceHydration.ts", "utf8");
 const cargoToml = readFileSync("src-tauri/Cargo.toml", "utf8");
 const info = JSON.parse(execFileSync("plutil", ["-convert", "json", "-o", "-", infoPlistPath], {
   encoding: "utf8",
@@ -93,6 +95,9 @@ assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");
 assertIncludes(apiTs, "listen<TrayStatusEvent>(\"hosts-switch://tray-status\"", "Frontend tray status listener");
 assertIncludes(apiTs, "CommandOrControl+Shift+H", "Frontend global shortcut binding");
+assertIncludes(appTsx, "hydrateGlobalShortcutPreference", "Startup global shortcut hydration");
+assertIncludes(systemPreferenceHydrationTs, "syncPreference(loaded)", "Startup global shortcut registration");
+assertIncludes(systemPreferenceHydrationTs, "Could not register global shortcut", "Startup global shortcut failure handling");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-fs", "Frontend dependency surface");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-dialog", "Frontend dependency surface");
 assertNotIncludes(cargoToml, "tauri-plugin-fs", "Direct Rust dependency surface");
