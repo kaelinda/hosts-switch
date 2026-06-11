@@ -59,10 +59,22 @@ Current bundle outputs:
 - `src-tauri/target/release/bundle/macos/Hosts Switch.app`
 - `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.4_aarch64.dmg`
 
+## Packaged App Verification
+
+`npm run verify:bundle` checks the packaged `.app` without touching `/etc/hosts`:
+
+- Bundle metadata, version, identifier, icon, executable, and arm64 Mach-O output.
+- `LSUIElement=true`, so the app runs as a status-bar utility.
+- Main editor window is configured as `visible=false` on launch.
+- Tauri global API is disabled in the WebView.
+- Status-bar tray setup and required native commands are registered.
+- Native profile import/export commands are used from the frontend.
+- WebView capabilities do not grant dialog open/save or filesystem text-file permissions.
+- The frontend does not import Tauri dialog or filesystem plugins directly.
+
 ## Manual Release Checklist
 
 - Open the packaged `.app` or install from the DMG.
-- Confirm the app launches as a status-bar utility without showing the editor window automatically.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
