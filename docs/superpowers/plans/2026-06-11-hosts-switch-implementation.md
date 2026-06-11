@@ -273,3 +273,18 @@
 - [x] Build the DMG release artifact.
 - [x] Document features, safety model, development commands, bundle outputs, and release checklist.
 - [x] Note that external distribution still needs signing and notarization.
+
+### Task 18: Status-Bar Group Disable
+
+**Files:**
+- Modify: `src-tauri/src/tray_switch.rs`
+- Modify: `README.md`
+- Modify: `docs/superpowers/specs/2026-06-11-hosts-switch-design.md`
+- Modify: `docs/release/manual-validation-v0.1.9.md`
+
+- [x] Add a per-group No Active Node item to the status-bar menu.
+- [x] Apply group disable through the same privileged hosts writer used by node switching.
+- [x] Keep profile state unchanged when the privileged apply path fails.
+- [x] Emit status events so an open editor refreshes after status-bar group disable.
+- [x] Add Rust unit tests for disabling a group from the status menu.
+- [x] Update product and release validation docs for the visible status-bar disable path.

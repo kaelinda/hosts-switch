@@ -85,7 +85,9 @@ assertIncludes(libRs, "commands::apply_hosts", "Apply hosts command registration
 assertIncludes(libRs, "commands::export_profiles_to_file", "Native export command registration");
 assertIncludes(libRs, "commands::import_profiles_from_file", "Native import command registration");
 assertIncludes(traySwitchRs, "const SWITCH_PREFIX: &str = \"switch-node:\"", "Status-bar switch menu IDs");
+assertIncludes(traySwitchRs, "const DISABLE_GROUP_PREFIX: &str = \"disable-group:\"", "Status-bar group disable menu IDs");
 assertIncludes(traySwitchRs, "commands::apply_hosts_state", "Status-bar switch apply path");
+assertIncludes(traySwitchRs, "disable_group_and_apply", "Status-bar group disable apply path");
 assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
 assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command call");
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");

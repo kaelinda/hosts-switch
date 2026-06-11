@@ -4,7 +4,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 
 ## Features
 
-- macOS status-bar menu for direct hosts profile switching.
+- macOS status-bar menu for direct hosts profile switching and per-group disable.
 - Groups and nodes with one active node per group by default.
 - Compact editor for creating, editing, deleting, reordering, and searching profiles.
 - Exact managed-block preview before writing `/etc/hosts`.
@@ -82,7 +82,7 @@ Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.s
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 
 - Open the packaged `.app` or install from the release asset `Hosts.Switch_0.1.9_aarch64.dmg`.
-- Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes.
+- Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes, including the per-group No Active Node item.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
 - Apply a valid node and confirm only the managed block changes in `/etc/hosts`.

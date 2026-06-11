@@ -9,7 +9,7 @@
 The first product-grade slice will be a Tauri 2 + React app with a compact menu-bar style window. It supports:
 
 - Viewing current `/etc/hosts`.
-- Switching hosts directly from the macOS status-bar menu.
+- Switching hosts directly from the macOS status-bar menu, including disabling all active nodes in a group.
 - Creating, editing, deleting, and reordering groups and nodes.
 - Searching profiles by group name, node name, or hosts content.
 - Activating at most one node per group by default.
@@ -91,7 +91,7 @@ If applying fails, the UI shows the exact error message returned by Rust and kee
 
 The app saves profile state only after a hosts apply succeeds. If the user cancels administrator authorization or the system write fails, the saved active profile still reflects the last successfully applied state.
 
-Status-bar node switching uses the same apply path as the window Apply button. Selecting a node from the menu prompts for administrator privileges when `/etc/hosts` must be written, saves the new profile state only after that write succeeds, refreshes the status-bar menu, and emits an event so an open editor window can refresh itself.
+Status-bar node switching uses the same apply path as the window Apply button. Selecting a node from the menu, or selecting a group's No Active Node item, prompts for administrator privileges when `/etc/hosts` must be written, saves the new profile state only after that write succeeds, refreshes the status-bar menu, and emits an event so an open editor window can refresh itself.
 
 Enabled node contents are validated before any Apply path writes `/etc/hosts`. Blank lines and comments are allowed. Non-comment lines must start with a valid IPv4 or IPv6 address and include at least one valid hostname. The editor surfaces validation issues by node and line number; the status-bar switch path reports the same validation error back to the editor window and does not write the hosts file.
 

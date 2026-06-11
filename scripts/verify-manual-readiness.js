@@ -74,15 +74,34 @@ function inspectReleaseJson(releaseJson) {
 
 function listHostsSwitchProcesses() {
   try {
-    return execFileSync("pgrep", ["-fl", "Hosts Switch.app|MacOS/Hosts Switch|/hosts-switch($| )"], {
+    return execFileSync("ps", ["-axo", "pid=,comm=,args="], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     })
       .split("\n")
-      .filter(Boolean);
+      .map((line) => line.trim())
+      .filter(isHostsSwitchProcessLine);
   } catch {
     return [];
   }
+}
+
+function isHostsSwitchProcessLine(line) {
+  if (!line) {
+    return false;
+  }
+
+  const fields = line.match(/^(\d+)\s+(\S+)\s+(.*)$/);
+  if (!fields) {
+    return false;
+  }
+
+  const [, , command, args] = fields;
+  return (
+    command.endsWith("/hosts-switch") ||
+    args.includes("/Hosts Switch.app/Contents/MacOS/hosts-switch") ||
+    args.includes("/target/release/hosts-switch")
+  );
 }
 
 function inspectHostsContent(hosts) {
@@ -160,6 +179,16 @@ function runSelfTest() {
   });
   if (digest !== "abc123") {
     fail(`release JSON digest self-test expected abc123, got ${digest}`);
+  }
+
+  const processLines = [
+    "123 /opt/homebrew/bin/gh gh release view v0.1.9 --repo kaelinda/hosts-switch --json tagName",
+    "456 /Applications/Hosts Switch.app/Contents/MacOS/hosts-switch /Applications/Hosts Switch.app/Contents/MacOS/hosts-switch",
+    "789 /tmp/project/src-tauri/target/release/hosts-switch /tmp/project/src-tauri/target/release/hosts-switch",
+  ];
+  const detected = processLines.filter(isHostsSwitchProcessLine);
+  if (detected.length !== 2 || detected.some((line) => line.includes("gh release view"))) {
+    fail(`process detection self-test failed: ${detected.join("; ")}`);
   }
 
   console.log(`Manual readiness self-test passed (${cases.length} cases)`);

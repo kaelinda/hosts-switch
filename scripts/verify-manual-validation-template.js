@@ -16,7 +16,7 @@ const requiredChecks = [
   },
   {
     id: "status-bar-menu-profiles",
-    readmeText: "status-bar menu lists saved groups/nodes",
+    readmeText: "status-bar menu lists saved groups/nodes, including the per-group No Active Node item",
   },
   {
     id: "status-bar-admin-prompt",

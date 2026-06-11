@@ -20,7 +20,7 @@ Before testing:
 Manual checks:
 
 - [ ] `status-bar-open-editor`: Left-click the status-bar icon opens and focuses the editor.
-- [ ] `status-bar-menu-profiles`: The status-bar menu lists saved groups and nodes with active checks.
+- [ ] `status-bar-menu-profiles`: The status-bar menu lists saved groups and nodes with active checks, plus a per-group No Active Node item.
 - [ ] `status-bar-admin-prompt`: Switching a valid node from the status-bar menu shows the macOS administrator prompt.
 - [ ] `admin-cancel-preserves-profile`: Cancelling that administrator prompt leaves the saved active profile unchanged.
 - [ ] `managed-block-only`: Applying a valid node changes only the Hosts Switch managed block in `/etc/hosts`.

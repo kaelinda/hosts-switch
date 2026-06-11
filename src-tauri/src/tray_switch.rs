@@ -7,6 +7,7 @@ use tauri::tray::TrayIcon;
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
 const SWITCH_PREFIX: &str = "switch-node:";
+const DISABLE_GROUP_PREFIX: &str = "disable-group:";
 const SHOW_ID: &str = "show";
 const REFRESH_ID: &str = "refresh-menu";
 const QUIT_ID: &str = "quit";
@@ -49,6 +50,14 @@ pub fn build_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
                     .build(app)?;
                     group_builder = group_builder.item(&item);
                 }
+
+                let no_active_item = CheckMenuItemBuilder::with_id(
+                    disable_group_item_id(&group.id),
+                    "No Active Node",
+                )
+                .checked(group.nodes.iter().all(|node| !node.enabled))
+                .build(app)?;
+                group_builder = group_builder.separator().item(&no_active_item);
             }
 
             let submenu = group_builder.build()?;
@@ -72,6 +81,7 @@ pub fn handle_menu_event(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
         REFRESH_ID => refresh_menu(app, tray),
         QUIT_ID => app.exit(0),
         _ if id.starts_with(SWITCH_PREFIX) => switch_node_from_menu(app, tray, id),
+        _ if id.starts_with(DISABLE_GROUP_PREFIX) => disable_group_from_menu(app, tray, id),
         _ => {}
     }
 }
@@ -132,6 +142,21 @@ pub fn switch_node(state: &mut AppState, group_id: &str, node_id: &str) -> bool 
     true
 }
 
+pub fn disable_group(state: &mut AppState, group_id: &str) -> bool {
+    let Some(group) = state.groups.iter_mut().find(|group| group.id == group_id) else {
+        return false;
+    };
+
+    let mut changed = false;
+    for node in &mut group.nodes {
+        if node.enabled {
+            node.enabled = false;
+            changed = true;
+        }
+    }
+    changed
+}
+
 fn switch_node_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
     let Some((group_id, node_id)) = parse_switch_item_id(id) else {
         return;
@@ -156,6 +181,35 @@ fn switch_node_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
     }
 }
 
+fn disable_group_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
+    let Some(group_id) = parse_disable_group_item_id(id) else {
+        return;
+    };
+
+    match disable_group_and_apply(app, &group_id) {
+        Ok(state) => {
+            refresh_menu(app, tray);
+            emit_status(
+                app,
+                Some(state),
+                "Hosts group disabled from status menu",
+                None,
+            );
+        }
+        Err(error) => {
+            refresh_menu(app, tray);
+            let current_state = store::load_state(app).ok();
+            emit_status(
+                app,
+                current_state,
+                "Failed to disable hosts group from status menu",
+                Some(error.to_string()),
+            );
+            show_main_window(app);
+        }
+    }
+}
+
 fn switch_and_apply(
     app: &AppHandle,
     group_id: &str,
@@ -163,6 +217,13 @@ fn switch_and_apply(
 ) -> commands::CommandResult<AppState> {
     let state = store::load_state(app)?;
     switch_and_apply_loaded(state, group_id, node_id, |state| {
+        commands::apply_hosts_state(app, state)
+    })
+}
+
+fn disable_group_and_apply(app: &AppHandle, group_id: &str) -> commands::CommandResult<AppState> {
+    let state = store::load_state(app)?;
+    disable_group_and_apply_loaded(state, group_id, |state| {
         commands::apply_hosts_state(app, state)
     })
 }
@@ -177,6 +238,20 @@ where
     F: FnOnce(AppState) -> commands::CommandResult<AppState>,
 {
     if !switch_node(&mut state, group_id, node_id) {
+        return Ok(state);
+    }
+    apply(state)
+}
+
+fn disable_group_and_apply_loaded<F>(
+    mut state: AppState,
+    group_id: &str,
+    apply: F,
+) -> commands::CommandResult<AppState>
+where
+    F: FnOnce(AppState) -> commands::CommandResult<AppState>,
+{
+    if !disable_group(&mut state, group_id) {
         return Ok(state);
     }
     apply(state)
@@ -204,6 +279,10 @@ fn switch_item_id(group_id: &str, node_id: &str) -> String {
     format!("{SWITCH_PREFIX}{}:{group_id}{node_id}", group_id.len())
 }
 
+fn disable_group_item_id(group_id: &str) -> String {
+    format!("{DISABLE_GROUP_PREFIX}{group_id}")
+}
+
 fn parse_switch_item_id(id: &str) -> Option<(String, String)> {
     let rest = id.strip_prefix(SWITCH_PREFIX)?;
     let (group_len_raw, payload) = rest.split_once(':')?;
@@ -211,6 +290,14 @@ fn parse_switch_item_id(id: &str) -> Option<(String, String)> {
     let group_id = payload.get(..group_len)?.to_string();
     let node_id = payload.get(group_len..)?.to_string();
     Some((group_id, node_id))
+}
+
+fn parse_disable_group_item_id(id: &str) -> Option<String> {
+    let group_id = id.strip_prefix(DISABLE_GROUP_PREFIX)?;
+    if group_id.is_empty() {
+        return None;
+    }
+    Some(group_id.to_string())
 }
 
 #[cfg(test)]
@@ -272,10 +359,35 @@ mod tests {
     }
 
     #[test]
+    fn disables_all_nodes_in_group() {
+        let mut state = state();
+
+        assert!(disable_group(&mut state, "g1"));
+
+        assert!(!state.groups[0].nodes[0].enabled);
+        assert!(!state.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
+    fn returns_false_when_group_is_already_disabled() {
+        let mut state = state();
+        state.groups[0].nodes[1].enabled = false;
+
+        assert!(!disable_group(&mut state, "g1"));
+    }
+
+    #[test]
     fn returns_false_for_unknown_node() {
         let mut state = state();
 
         assert!(!switch_node(&mut state, "g1", "missing"));
+    }
+
+    #[test]
+    fn returns_false_for_unknown_group_disable() {
+        let mut state = state();
+
+        assert!(!disable_group(&mut state, "missing"));
     }
 
     #[test]
@@ -295,8 +407,34 @@ mod tests {
     }
 
     #[test]
+    fn applies_disabled_group_after_status_menu_selection() {
+        let observed = Rc::new(RefCell::new(None::<AppState>));
+        let observed_apply = Rc::clone(&observed);
+
+        let result = disable_group_and_apply_loaded(state(), "g1", move |next| {
+            *observed_apply.borrow_mut() = Some(next.clone());
+            Ok(next)
+        })
+        .unwrap();
+
+        assert!(!result.groups[0].nodes[0].enabled);
+        assert!(!result.groups[0].nodes[1].enabled);
+        assert_eq!(observed.borrow().clone().unwrap(), result);
+    }
+
+    #[test]
     fn propagates_apply_failure_without_returning_switched_state() {
         let error = switch_and_apply_loaded(state(), "g1", "n1", |_| {
+            Err(CommandError::Apply("cancelled".to_string()))
+        })
+        .unwrap_err();
+
+        assert!(matches!(error, CommandError::Apply(message) if message == "cancelled"));
+    }
+
+    #[test]
+    fn propagates_disable_group_apply_failure() {
+        let error = disable_group_and_apply_loaded(state(), "g1", |_| {
             Err(CommandError::Apply("cancelled".to_string()))
         })
         .unwrap_err();
@@ -321,6 +459,24 @@ mod tests {
     }
 
     #[test]
+    fn does_not_apply_already_disabled_group_selection() {
+        let mut disabled = state();
+        disabled.groups[0].nodes[1].enabled = false;
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let result = disable_group_and_apply_loaded(disabled, "g1", move |next| {
+            *called_apply.borrow_mut() = true;
+            Ok(next)
+        })
+        .unwrap();
+
+        assert!(!*called.borrow());
+        assert!(!result.groups[0].nodes[0].enabled);
+        assert!(!result.groups[0].nodes[1].enabled);
+    }
+
+    #[test]
     fn parses_switch_item_ids() {
         let id = switch_item_id("group-a", "node-b");
         assert_eq!(
@@ -334,5 +490,17 @@ mod tests {
         );
         assert_eq!(parse_switch_item_id("show"), None);
         assert_eq!(parse_switch_item_id("switch-node:9:short"), None);
+    }
+
+    #[test]
+    fn parses_disable_group_item_ids() {
+        let id = disable_group_item_id("group:a");
+
+        assert_eq!(
+            parse_disable_group_item_id(&id),
+            Some("group:a".to_string())
+        );
+        assert_eq!(parse_disable_group_item_id("disable-group:"), None);
+        assert_eq!(parse_disable_group_item_id("show"), None);
     }
 }
