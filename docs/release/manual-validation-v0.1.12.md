@@ -28,7 +28,7 @@ Manual checks:
 - [ ] `native-json-roundtrip`: Export profiles to JSON and import the same JSON back through native dialogs.
 - [ ] `launch-at-login-system-setting`: Toggling Launch at login is reflected in macOS System Settings.
 - [ ] `global-shortcut-focuses-editor`: Toggling Global shortcut on lets `CommandOrControl+Shift+H` open and focus the editor.
-- [ ] `latest-backup-restore`: Restore Latest Backup restores the previously backed-up hosts file only after intentionally testing Apply.
+- [ ] `latest-backup-restore`: Restore Latest Backup asks for confirmation, cancelling leaves `/etc/hosts` unchanged, and confirming restores the previously backed-up hosts file only after intentionally testing Apply.
 
 After testing:
 

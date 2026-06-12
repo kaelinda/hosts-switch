@@ -103,3 +103,36 @@ test("browser demo warns before applying when the hosts file is empty", async ({
   );
   expect(storedHosts).toBe("");
 });
+
+test("browser demo confirms before restoring the latest hosts backup", async ({ page }) => {
+  await page.addInitScript(([hostsKey, backupKey]) => {
+    window.localStorage.setItem(hostsKey, "127.0.0.1 current.local\n");
+    window.localStorage.setItem(backupKey, "127.0.0.1 backup.local\n");
+  }, [browserHostsKey, browserHostsBackupKey]);
+
+  await page.goto("/");
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Restore the latest /etc/hosts backup?");
+    await dialog.dismiss();
+  });
+  await page.getByTitle("Restore last hosts backup").click();
+  await expect(page.getByText("Restore backup cancelled")).toBeVisible();
+  await expect
+    .poll(async () =>
+      page.evaluate((hostsKey) => window.localStorage.getItem(hostsKey), browserHostsKey),
+    )
+    .toBe("127.0.0.1 current.local\n");
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("replace the current hosts file");
+    await dialog.accept();
+  });
+  await page.getByTitle("Restore last hosts backup").click();
+  await expect(page.getByText("Last hosts backup restored")).toBeVisible();
+  await expect
+    .poll(async () =>
+      page.evaluate((hostsKey) => window.localStorage.getItem(hostsKey), browserHostsKey),
+    )
+    .toBe("127.0.0.1 backup.local\n");
+});

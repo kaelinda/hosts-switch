@@ -48,7 +48,7 @@ const requiredChecks = [
   },
   {
     id: "latest-backup-restore",
-    readmeText: "Restore the latest hosts backup",
+    readmeText: "confirm the restore prompt",
   },
 ];
 

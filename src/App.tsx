@@ -479,6 +479,14 @@ function App() {
   }
 
   async function restoreLastBackup() {
+    const confirmed = window.confirm(
+      "Restore the latest /etc/hosts backup? This may ask for administrator privileges and replace the current hosts file.",
+    );
+    if (!confirmed) {
+      setStatus("Restore backup cancelled");
+      return;
+    }
+
     await runCommand("Last hosts backup restored", async () => {
       clearHoverPreviewState();
       await restoreLastHostsBackup();
