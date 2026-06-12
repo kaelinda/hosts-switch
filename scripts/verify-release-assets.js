@@ -8,8 +8,10 @@ const version = packageJson.version;
 const tag = `v${version}`;
 const releaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const resultPath = `docs/release/manual-validation-${tag}.result.json`;
+const releaseNotesPath = `docs/release/release-notes-${tag}.md`;
 const releaseUrl = `https://github.com/kaelinda/hosts-switch/releases/tag/${tag}`;
 const result = JSON.parse(readFileSync(resultPath, "utf8"));
+const releaseNotes = readFileSync(releaseNotesPath, "utf8");
 
 function fail(message) {
   console.error(`Release asset verification failed: ${message}`);
@@ -35,6 +37,10 @@ function assertEqual(actual, expected, label) {
   if (actual !== expected) {
     fail(`${label} expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
   }
+}
+
+function normalizeText(text) {
+  return text.replace(/\r\n/g, "\n").trimEnd();
 }
 
 function readReleaseJson() {
@@ -103,6 +109,16 @@ if (!release.body || !release.body.includes("## 中文版本说明")) {
 if (!release.body.includes("真实 `/etc/hosts` 管理员写入")) {
   fail("release body is missing the Chinese manual-validation warning");
 }
+
+const expectedReleaseBody = releaseNotes.replace(
+  /^- SHA-256: .+$/m,
+  `- SHA-256: \`${result.assetSha256}\``,
+);
+assertEqual(
+  normalizeText(release.body),
+  normalizeText(expectedReleaseBody),
+  "release body",
+);
 
 const shaFile = downloadShaAsset();
 const [shaFileDigest, ...shaFilePathParts] = shaFile.split(/\s+/);

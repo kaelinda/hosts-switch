@@ -13,6 +13,7 @@ const expectedTag = `v${version}`;
 const expectedDmgName = `Hosts Switch_${version}_aarch64.dmg`;
 const expectedReleaseAssetName = `Hosts.Switch_${version}_aarch64.dmg`;
 const expectedReadmePath = `src-tauri/target/release/bundle/dmg/${expectedDmgName}`;
+const expectedReleaseNotesPath = `docs/release/release-notes-${expectedTag}.md`;
 
 function fail(message) {
   console.error(`Release version verification failed: ${message}`);
@@ -41,6 +42,7 @@ assertIncludes(
   "Cargo lock hosts-switch version",
 );
 assertIncludes(readme, expectedReadmePath, "README DMG path");
+assertIncludes(readme, expectedReleaseNotesPath, "README release notes path");
 
 const releaseTag = process.env.HOSTS_SWITCH_RELEASE_TAG;
 if (releaseTag) {

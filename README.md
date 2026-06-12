@@ -85,6 +85,7 @@ Run `npm run verify:manual-result` to validate the structured manual result, and
 The structured result records the release asset SHA-256 and tag commit so manual validation remains tied to the exact DMG under test.
 After a prerelease is published, run `npm run sync:manual-release` to refresh those fields from GitHub before recording manual validation.
 Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.sha256`, release body, and structured result all agree.
+Release notes are maintained in `docs/release/release-notes-v0.1.12.md`; `npm run verify:release-notes` checks that the Chinese version notes, asset name, manual-validation warning, and SHA-256 line stay ready for publication.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 Run `npm run prepare:manual-validation` to print the current `/etc/hosts` SHA-256 and suggested backup path. Add `-- --write-backup` to copy `/etc/hosts` to that backup path before packaged-app testing. Empty `/etc/hosts` backups are refused by default; only add `-- --write-backup --allow-empty-hosts-backup` when an empty system hosts file is intentional.
 Run `npm run record:manual-result -- --check <check-id>=pass --check-note <check-id>="evidence"` to update the structured result after each manual check; pass/fail checks must include evidence notes, and the command re-runs `npm run verify:manual-result` after writing.
@@ -103,5 +104,6 @@ Run `npm run record:manual-result -- --check <check-id>=pass --check-note <check
 ## Distribution Notes
 
 The release workflow publishes `Hosts.Switch_0.1.12_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.12_aarch64.dmg`.
+GitHub release notes are rendered from `docs/release/release-notes-v0.1.12.md`, with the workflow substituting the final DMG SHA-256 before publishing.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.
