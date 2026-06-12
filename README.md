@@ -74,7 +74,7 @@ npm run verify:dmg
 Current bundle outputs:
 
 - `src-tauri/target/release/bundle/macos/Hosts Switch.app`
-- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.17_aarch64.dmg`
+- `src-tauri/target/release/bundle/dmg/Hosts Switch_0.1.18_aarch64.dmg`
 
 ## Packaged App Verification
 
@@ -98,19 +98,19 @@ Current bundle outputs:
 
 ## Manual Release Checklist
 
-Use `docs/release/manual-validation-v0.1.17.md` and `docs/release/manual-validation-v0.1.17.result.json` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
+Use `docs/release/manual-validation-v0.1.18.md` and `docs/release/manual-validation-v0.1.18.result.json` to record these checks. Run `npm run verify:manual-validation` to confirm the release checklist and manual validation template stay in sync.
 Run `npm run verify:manual-result` to validate the structured manual result, and run it with `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1` before promoting a prerelease to a production release.
 The structured result records the release asset SHA-256 and tag commit so manual validation remains tied to the exact DMG under test.
 After a prerelease is published, run `npm run sync:manual-release` to refresh those fields from GitHub before recording manual validation.
 Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.sha256`, release body, and structured result all agree.
 Run `npm run prepare:manual-release-asset` to download and SHA-256 verify the exact GitHub release DMG into `manual-validation-artifacts/` before packaged-app testing.
-Release notes are maintained in `docs/release/release-notes-v0.1.17.md`; `npm run verify:release-notes` checks that the Chinese version notes, asset name, manual-validation warning, and SHA-256 line stay ready for publication.
+Release notes are maintained in `docs/release/release-notes-v0.1.18.md`; `npm run verify:release-notes` checks that the Chinese version notes, asset name, manual-validation warning, and SHA-256 line stay ready for publication.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
 If `/etc/hosts` is empty or missing localhost entries, run `npm run print:hosts-recovery` to print a read-only recovery guide with the recommended default macOS hosts content and manual sudo commands.
 Run `npm run prepare:manual-validation` to print the current `/etc/hosts` SHA-256 and suggested backup path. Add `-- --write-backup` to copy `/etc/hosts` to that backup path before packaged-app testing. Empty `/etc/hosts` backups are refused by default; only add `-- --write-backup --allow-empty-hosts-backup` when an empty system hosts file is intentional.
 Run `npm run record:manual-result -- --help` to list valid check IDs. Use `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>="evidence"` to update the structured result after each manual check; pass/fail checks must include evidence notes, and the command re-runs `npm run verify:manual-result` after writing.
 
-- Open the packaged `.app` or install from the verified release asset `manual-validation-artifacts/v0.1.17/Hosts.Switch_0.1.17_aarch64.dmg`.
+- Open the packaged `.app` or install from the verified release asset `manual-validation-artifacts/v0.1.18/Hosts.Switch_0.1.18_aarch64.dmg`.
 - Confirm left-click opens the editor and the status-bar menu lists saved groups/nodes, including the per-group No Active Node item.
 - Switch a valid node from the status-bar menu and confirm the administrator prompt appears.
 - Select the already-active node from the status-bar menu and confirm it remains active without triggering another hosts write; use No Active Node to disable the group.
@@ -126,7 +126,7 @@ Run `npm run record:manual-result -- --help` to list valid check IDs. Use `npm r
 
 ## Distribution Notes
 
-The release workflow publishes `Hosts.Switch_0.1.17_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.17_aarch64.dmg`.
-GitHub release notes are rendered from `docs/release/release-notes-v0.1.17.md`, with the workflow substituting the final DMG SHA-256 before publishing.
+The release workflow publishes `Hosts.Switch_0.1.18_aarch64.dmg` as the downloadable asset. Local Tauri builds still produce `Hosts Switch_0.1.18_aarch64.dmg`.
+GitHub release notes are rendered from `docs/release/release-notes-v0.1.18.md`, with the workflow substituting the final DMG SHA-256 before publishing.
 
 The local DMG is unsigned and not notarized. External distribution still needs a Developer ID certificate, hardened runtime signing, notarization, and stapling.
