@@ -13,6 +13,7 @@ const requiredChecks = [
   "status-bar-open-editor",
   "status-bar-menu-profiles",
   "status-bar-admin-prompt",
+  "status-bar-active-node-noop",
   "admin-cancel-preserves-profile",
   "managed-block-only",
   "invalid-content-blocked",

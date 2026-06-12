@@ -23,6 +23,10 @@ const requiredChecks = [
     readmeText: "administrator prompt appears",
   },
   {
+    id: "status-bar-active-node-noop",
+    readmeText: "already-active node from the status-bar menu",
+  },
+  {
     id: "admin-cancel-preserves-profile",
     readmeText: "cancelling the administrator prompt leaves the saved active profile unchanged",
   },
