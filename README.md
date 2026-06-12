@@ -17,6 +17,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Confirmed JSON file import/export for profile migration, plus browser demo copy/paste fallback.
 - Launch at login toggle backed by a macOS LaunchAgent.
 - Global editor shortcut: `CommandOrControl+Shift+H`.
+- Single-instance guard so opening the app again focuses the existing editor instead of creating another status-bar item.
 - DMG and `.app` bundle output for local distribution.
 
 ## Safety Model
@@ -72,6 +73,7 @@ Current bundle outputs:
 - Main editor window is configured as `visible=false` on launch.
 - Tauri global API is disabled in the WebView.
 - Status-bar tray setup and required native commands are registered.
+- Single-instance plugin is registered to focus the existing editor on a second launch.
 - Native profile import/export commands are used from the frontend.
 - WebView capabilities do not grant dialog open/save or filesystem text-file permissions.
 - The frontend does not import Tauri dialog or filesystem plugins directly.

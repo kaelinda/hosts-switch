@@ -51,6 +51,7 @@ const apiTs = readFileSync("src/api.ts", "utf8");
 const appTsx = readFileSync("src/App.tsx", "utf8");
 const systemPreferenceHydrationTs = readFileSync("src/systemPreferenceHydration.ts", "utf8");
 const cargoToml = readFileSync("src-tauri/Cargo.toml", "utf8");
+const cargoLock = readFileSync("src-tauri/Cargo.lock", "utf8");
 const info = JSON.parse(execFileSync("plutil", ["-convert", "json", "-o", "-", infoPlistPath], {
   encoding: "utf8",
 }));
@@ -77,6 +78,16 @@ assertEqual(tauriConfig.app?.withGlobalTauri, false, "global Tauri API exposure"
 assertIncludes(fileInfo, "Mach-O", "Executable format");
 assertIncludes(fileInfo, "arm64", "Executable architecture");
 assertIncludes(libRs, "TrayIconBuilder::with_id(\"main\")", "Status-bar tray registration");
+assertIncludes(
+  libRs,
+  "tauri_plugin_single_instance::init",
+  "Single-instance plugin registration",
+);
+assertIncludes(
+  libRs,
+  "crate::tray_switch::show_main_window(app)",
+  "Single-instance editor focus behavior",
+);
 assertIncludes(libRs, ".show_menu_on_left_click(false)", "Status-bar click behavior");
 assertIncludes(libRs, ".on_menu_event", "Status-bar menu event handler");
 assertIncludes(libRs, "tray_switch::handle_menu_event", "Status-bar menu dispatcher");
@@ -103,6 +114,12 @@ assertIncludes(appTsx, "deleteGroupConfirmation", "Delete group confirmation");
 assertIncludes(appTsx, "deleteNodeConfirmation", "Delete node confirmation");
 assertIncludes(systemPreferenceHydrationTs, "syncPreference(loaded)", "Startup global shortcut registration");
 assertIncludes(systemPreferenceHydrationTs, "Could not register global shortcut", "Startup global shortcut failure handling");
+assertIncludes(cargoToml, "tauri-plugin-single-instance", "Single-instance plugin dependency");
+assertIncludes(
+  cargoLock,
+  "name = \"tauri-plugin-single-instance\"",
+  "Single-instance plugin lock entry",
+);
 assertNotIncludes(apiTs, "@tauri-apps/plugin-fs", "Frontend dependency surface");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-dialog", "Frontend dependency surface");
 assertNotIncludes(cargoToml, "tauri-plugin-fs", "Direct Rust dependency surface");
