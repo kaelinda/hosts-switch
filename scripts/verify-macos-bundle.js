@@ -102,6 +102,10 @@ assertIncludes(traySwitchRs, "const SWITCH_PREFIX: &str = \"switch-node:\"", "St
 assertIncludes(traySwitchRs, "const DISABLE_GROUP_PREFIX: &str = \"disable-group:\"", "Status-bar group disable menu IDs");
 assertIncludes(traySwitchRs, "commands::apply_hosts_state", "Status-bar switch apply path");
 assertIncludes(traySwitchRs, "disable_group_and_apply", "Status-bar group disable apply path");
+assertIncludes(traySwitchRs, "ensure_node_exists(&state, group_id, node_id)", "Status-bar stale node guard");
+assertIncludes(traySwitchRs, "ensure_group_exists(&state, group_id)", "Status-bar stale group guard");
+assertIncludes(traySwitchRs, "STALE_MENU_NODE_MESSAGE", "Status-bar stale node error");
+assertIncludes(traySwitchRs, "STALE_MENU_GROUP_MESSAGE", "Status-bar stale group error");
 assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
 assertIncludes(storeRs, "fn write_file_atomically", "Atomic profile persistence helper");
 assertIncludes(storeRs, "fs::rename(&temp_path, path)", "Atomic profile persistence rename");

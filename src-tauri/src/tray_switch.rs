@@ -11,6 +11,9 @@ const DISABLE_GROUP_PREFIX: &str = "disable-group:";
 const SHOW_ID: &str = "show";
 const REFRESH_ID: &str = "refresh-menu";
 const QUIT_ID: &str = "quit";
+const STALE_MENU_GROUP_MESSAGE: &str =
+    "Status menu group is stale. Refresh the menu and try again.";
+const STALE_MENU_NODE_MESSAGE: &str = "Status menu node is stale. Refresh the menu and try again.";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -237,6 +240,7 @@ fn switch_and_apply_loaded<F>(
 where
     F: FnOnce(AppState) -> commands::CommandResult<AppState>,
 {
+    ensure_node_exists(&state, group_id, node_id)?;
     if !switch_node(&mut state, group_id, node_id) {
         return Ok(state);
     }
@@ -251,10 +255,41 @@ fn disable_group_and_apply_loaded<F>(
 where
     F: FnOnce(AppState) -> commands::CommandResult<AppState>,
 {
+    ensure_group_exists(&state, group_id)?;
     if !disable_group(&mut state, group_id) {
         return Ok(state);
     }
     apply(state)
+}
+
+fn ensure_node_exists(
+    state: &AppState,
+    group_id: &str,
+    node_id: &str,
+) -> commands::CommandResult<()> {
+    let Some(group) = state.groups.iter().find(|group| group.id == group_id) else {
+        return Err(commands::CommandError::Validation(
+            STALE_MENU_GROUP_MESSAGE.to_string(),
+        ));
+    };
+
+    if group.nodes.iter().any(|node| node.id == node_id) {
+        return Ok(());
+    }
+
+    Err(commands::CommandError::Validation(
+        STALE_MENU_NODE_MESSAGE.to_string(),
+    ))
+}
+
+fn ensure_group_exists(state: &AppState, group_id: &str) -> commands::CommandResult<()> {
+    if state.groups.iter().any(|group| group.id == group_id) {
+        return Ok(());
+    }
+
+    Err(commands::CommandError::Validation(
+        STALE_MENU_GROUP_MESSAGE.to_string(),
+    ))
 }
 
 fn load_state_for_menu(app: &AppHandle) -> AppState {
@@ -291,10 +326,7 @@ fn parse_switch_item_id(id: &str) -> Option<(String, String)> {
         return None;
     }
     let group_id = payload.get(..group_len)?.to_string();
-    let node_id = payload
-        .get(group_len..)?
-        .strip_prefix(':')?
-        .to_string();
+    let node_id = payload.get(group_len..)?.strip_prefix(':')?.to_string();
     if node_id.is_empty() {
         return None;
     }
@@ -452,19 +484,54 @@ mod tests {
     }
 
     #[test]
-    fn does_not_apply_unknown_status_menu_selection() {
+    fn rejects_unknown_status_menu_node_selection() {
         let called = Rc::new(RefCell::new(false));
         let called_apply = Rc::clone(&called);
 
-        let result = switch_and_apply_loaded(state(), "g1", "missing", move |next| {
+        let error = switch_and_apply_loaded(state(), "g1", "missing", move |next| {
             *called_apply.borrow_mut() = true;
             Ok(next)
         })
-        .unwrap();
+        .unwrap_err();
 
         assert!(!*called.borrow());
-        assert!(!result.groups[0].nodes[0].enabled);
-        assert!(result.groups[0].nodes[1].enabled);
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == STALE_MENU_NODE_MESSAGE)
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_status_menu_group_selection() {
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let error = switch_and_apply_loaded(state(), "missing", "n1", move |next| {
+            *called_apply.borrow_mut() = true;
+            Ok(next)
+        })
+        .unwrap_err();
+
+        assert!(!*called.borrow());
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == STALE_MENU_GROUP_MESSAGE)
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_status_menu_group_disable_selection() {
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let error = disable_group_and_apply_loaded(state(), "missing", move |next| {
+            *called_apply.borrow_mut() = true;
+            Ok(next)
+        })
+        .unwrap_err();
+
+        assert!(!*called.borrow());
+        assert!(
+            matches!(error, CommandError::Validation(message) if message == STALE_MENU_GROUP_MESSAGE)
+        );
     }
 
     #[test]
