@@ -50,6 +50,7 @@ for (const requiredText of [
   `Hosts Switch`,
   tag,
   "本版本重点：",
+  "支持 macOS 状态栏菜单直接切换 hosts 节点",
   "使用前请注意：",
   "真实 `/etc/hosts` 管理员写入",
   "manual validation checklist",

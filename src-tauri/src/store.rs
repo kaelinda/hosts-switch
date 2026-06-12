@@ -14,13 +14,8 @@ const LAST_PROFILES_BACKUP_FILE: &str = "profiles-last-backup.json";
 
 pub fn load_state(app: &AppHandle) -> Result<AppState, CommandError> {
     let path = state_path(app)?;
-    if !path.exists() {
-        let state = AppState::default();
-        save_state(app, &state)?;
-        return Ok(state);
-    }
-
-    read_state_from_path(&path)
+    let backup_path = profiles_backup_path(app)?;
+    load_state_from_paths(&path, &backup_path)
 }
 
 pub fn save_state(app: &AppHandle, state: &AppState) -> Result<AppState, CommandError> {
@@ -49,6 +44,68 @@ fn read_state_from_path(path: &Path) -> Result<AppState, CommandError> {
         source,
     })?;
     Ok(normalize_state(state))
+}
+
+fn load_state_from_paths(path: &Path, backup_path: &Path) -> Result<AppState, CommandError> {
+    match read_state_from_path(path) {
+        Ok(state) => Ok(state),
+        Err(error) if is_missing_file_error(&error) => recreate_default_state(path),
+        Err(error) if is_recoverable_state_file_error(&error) => {
+            recover_state_from_backup_or_default(path, backup_path)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn recover_state_from_backup_or_default(
+    path: &Path,
+    backup_path: &Path,
+) -> Result<AppState, CommandError> {
+    if let Ok(backup) = read_state_from_path(backup_path) {
+        return write_state_to_path(path, &backup);
+    }
+
+    preserve_corrupted_state_file(path)?;
+    recreate_default_state(path)
+}
+
+fn recreate_default_state(path: &Path) -> Result<AppState, CommandError> {
+    write_state_to_path(path, &AppState::default())
+}
+
+fn preserve_corrupted_state_file(path: &Path) -> Result<PathBuf, CommandError> {
+    let parent = path.parent().ok_or_else(|| {
+        CommandError::Path(format!(
+            "failed to resolve parent directory for {}",
+            path.display()
+        ))
+    })?;
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| CommandError::Path(format!("invalid file name {}", path.display())))?;
+    let corrupt_path = parent.join(format!("{file_name}.corrupt-{}", Uuid::new_v4()));
+
+    fs::copy(path, &corrupt_path).map_err(|source| CommandError::IoWithPath {
+        path: corrupt_path.clone(),
+        source,
+    })?;
+    Ok(corrupt_path)
+}
+
+fn is_missing_file_error(error: &CommandError) -> bool {
+    matches!(
+        error,
+        CommandError::IoWithPath { source, .. } if source.kind() == std::io::ErrorKind::NotFound
+    )
+}
+
+fn is_recoverable_state_file_error(error: &CommandError) -> bool {
+    match error {
+        CommandError::StoreJson { .. } => true,
+        CommandError::IoWithPath { source, .. } => source.kind() == std::io::ErrorKind::InvalidData,
+        _ => false,
+    }
 }
 
 fn write_state_to_path(path: &Path, state: &AppState) -> Result<AppState, CommandError> {
@@ -260,6 +317,45 @@ mod tests {
         assert!(!written.groups[0].nodes[1].enabled);
         assert_eq!(restored, written);
         assert!(fs::read_to_string(&path).unwrap().contains("\"groups\""));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn corrupted_profile_store_recovers_from_last_profiles_backup() {
+        let dir = temp_dir("recover-backup");
+        let path = dir.join("profiles.json");
+        let backup_path = dir.join("backups").join("profiles-last-backup.json");
+        fs::write(&path, "{not json").unwrap();
+        let backup = write_state_to_path(&backup_path, &state()).unwrap();
+
+        let recovered = load_state_from_paths(&path, &backup_path).unwrap();
+
+        assert_eq!(recovered, backup);
+        assert_eq!(read_state_from_path(&path).unwrap(), backup);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn corrupted_profile_store_is_preserved_when_default_state_is_recreated() {
+        let dir = temp_dir("recover-default");
+        let path = dir.join("profiles.json");
+        let backup_path = dir.join("backups").join("profiles-last-backup.json");
+        fs::write(&path, "{not json").unwrap();
+
+        let recovered = load_state_from_paths(&path, &backup_path).unwrap();
+
+        assert_eq!(recovered.version, AppState::default().version);
+        assert_eq!(read_state_from_path(&path).unwrap(), recovered);
+        let corrupt_files: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_name().to_string_lossy().contains(".corrupt-"))
+            .collect();
+        assert_eq!(corrupt_files.len(), 1);
+        assert_eq!(
+            fs::read_to_string(corrupt_files[0].path()).unwrap(),
+            "{not json"
+        );
         let _ = fs::remove_dir_all(dir);
     }
 }

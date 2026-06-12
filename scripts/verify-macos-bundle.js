@@ -116,6 +116,9 @@ assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switc
 assertIncludes(storeRs, "fn write_file_atomically", "Atomic profile persistence helper");
 assertIncludes(storeRs, "fs::rename(&temp_path, path)", "Atomic profile persistence rename");
 assertIncludes(storeRs, "profiles-last-backup.json", "Last profiles backup file");
+assertIncludes(storeRs, "recover_state_from_backup_or_default", "Corrupted profile store recovery");
+assertIncludes(storeRs, "preserve_corrupted_state_file", "Corrupted profile preservation");
+assertIncludes(storeRs, ".corrupt-", "Corrupted profile preservation suffix");
 assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command call");
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");
 assertIncludes(apiTs, "restore_last_profiles_backup", "Frontend profile backup restore command call");
