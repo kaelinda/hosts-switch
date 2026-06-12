@@ -18,6 +18,7 @@ const requiredChecks = [
   "managed-block-only",
   "invalid-content-blocked",
   "native-json-roundtrip",
+  "profiles-backup-restore",
   "delete-confirmation",
   "launch-at-login-system-setting",
   "global-shortcut-focuses-editor",

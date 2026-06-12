@@ -39,6 +39,10 @@ const requiredChecks = [
     readmeText: "confirm the replacement prompt",
   },
   {
+    id: "profiles-backup-restore",
+    readmeText: "confirmed profile backup restore",
+  },
+  {
     id: "delete-confirmation",
     readmeText: "confirmed deleting",
   },
@@ -135,6 +139,7 @@ for (const requiredText of [
   "Run `npm run prepare:manual-release-asset` to download the exact GitHub release DMG and verify its SHA-256 against this result file.",
   "Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`; if the command refuses an empty hosts file, restore or intentionally confirm the system hosts state before continuing.",
   "`delete-confirmation`: Deleting a node or group asks for confirmation",
+  "`profiles-backup-restore`: Replace saved profiles, then restore the latest profiles backup",
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
   "Run `npm run prepare:manual-release-asset` before packaged-app testing to avoid validating a different local DMG build.",
