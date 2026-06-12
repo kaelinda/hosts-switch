@@ -7,3 +7,4 @@ src-tauri/target/
 playwright-report/
 test-results/
 hosts-switch-browser-smoke.png
+manual-validation-artifacts/

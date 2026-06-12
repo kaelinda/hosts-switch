@@ -9,6 +9,13 @@ const checklist = readFileSync(checklistPath, "utf8");
 const help = execFileSync("node", ["scripts/record-manual-validation-result.js", "--help"], {
   encoding: "utf8",
 });
+const prepareReleaseAssetHelp = execFileSync(
+  "node",
+  ["scripts/prepare-manual-release-asset.js", "--help"],
+  {
+    encoding: "utf8",
+  },
+);
 
 function fail(message) {
   console.error(`Manual recording help verification failed: ${message}`);
@@ -35,5 +42,9 @@ assertIncludes(
   "--check-note <id=note>                Set evidence notes for one manual check. Required for pass/fail checks. Repeatable.",
   "recording help",
 );
+
+assertIncludes(prepareReleaseAssetHelp, "download", "release asset preparation help");
+assertIncludes(prepareReleaseAssetHelp, "does not launch the app", "release asset preparation help");
+assertIncludes(prepareReleaseAssetHelp, "modify /etc/hosts", "release asset preparation help");
 
 console.log("Verified manual result recording help");

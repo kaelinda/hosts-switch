@@ -9,6 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "browser:smoke": "playwright test",
     "sync:manual-release": "node scripts/sync-manual-release-metadata.js",
+    "prepare:manual-release-asset": "node scripts/prepare-manual-release-asset.js",
+    "prepare:manual-release-asset:self-test": "node scripts/prepare-manual-release-asset.js --self-test",
     "prepare:manual-validation": "node scripts/prepare-manual-validation.js",
     "prepare:manual-validation:self-test": "node scripts/prepare-manual-validation.js --self-test",
     "record:manual-result": "node scripts/record-manual-validation-result.js",

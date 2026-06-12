@@ -13,9 +13,10 @@ Release under test:
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
+- [ ] Run `npm run prepare:manual-release-asset` to download the exact GitHub release DMG and verify its SHA-256 against this result file.
 - [ ] Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`; if the command refuses an empty hosts file, restore or intentionally confirm the system hosts state before continuing.
 - [ ] Confirm no unrelated Hosts Switch instance is running.
-- [ ] Install or open the packaged app from the release asset `Hosts.Switch_0.1.13_aarch64.dmg`.
+- [ ] Install or open the packaged app from the verified release asset `manual-validation-artifacts/v0.1.13/Hosts.Switch_0.1.13_aarch64.dmg`.
 
 Manual checks:
 
@@ -53,5 +54,6 @@ Structured result:
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.
 - Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.
+- Run `npm run prepare:manual-release-asset` before packaged-app testing to avoid validating a different local DMG build.
 - Run `npm run verify:manual-result` to validate the result file.
 - Run `HOSTS_SWITCH_REQUIRE_MANUAL_PASS=1 npm run verify:manual-result` before promoting this prerelease to a production release.
