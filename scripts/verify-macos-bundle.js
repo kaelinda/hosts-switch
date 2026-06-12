@@ -73,12 +73,14 @@ assertEqual(info.CFBundleShortVersionString, packageJson.version, "short version
 assertEqual(info.CFBundleVersion, packageJson.version, "bundle version");
 assertEqual(info.LSUIElement, true, "LSUIElement");
 assertEqual(info.LSMinimumSystemVersion, tauriConfig.bundle.macOS.minimumSystemVersion, "minimum macOS version");
-assertEqual(mainWindow.visible, false, "main window visible on launch");
+assertEqual(mainWindow.visible, true, "main window visible on launch");
 assertEqual(tauriConfig.app?.withGlobalTauri, false, "global Tauri API exposure");
 
 assertIncludes(fileInfo, "Mach-O", "Executable format");
 assertIncludes(fileInfo, "arm64", "Executable architecture");
 assertIncludes(libRs, "TrayIconBuilder::with_id(\"main\")", "Status-bar tray registration");
+assertIncludes(libRs, ".icon(", "Status-bar tray icon assignment");
+assertIncludes(libRs, "default_window_icon", "Status-bar tray uses bundled app icon");
 assertIncludes(
   libRs,
   "tauri_plugin_single_instance::init",

@@ -1,0 +1,75 @@
+{
+  "version": "0.1.19",
+  "tag": "v0.1.19",
+  "commit": "",
+  "releaseUrl": "https://github.com/kaelinda/hosts-switch/releases/tag/v0.1.19",
+  "asset": "Hosts.Switch_0.1.19_aarch64.dmg",
+  "assetSha256": "",
+  "assetSize": 0,
+  "sha256Asset": "dmg.sha256",
+  "status": "pending",
+  "tester": "",
+  "date": "",
+  "environment": {
+    "macOS": "",
+    "hardware": "",
+    "source": "release-asset"
+  },
+  "hostsBeforeSha256": "",
+  "hostsAfterRestoredSha256": "",
+  "checks": {
+    "status-bar-open-editor": {
+      "status": "pending",
+      "notes": ""
+    },
+    "status-bar-menu-profiles": {
+      "status": "pending",
+      "notes": ""
+    },
+    "status-bar-admin-prompt": {
+      "status": "pending",
+      "notes": ""
+    },
+    "status-bar-active-node-noop": {
+      "status": "pending",
+      "notes": ""
+    },
+    "admin-cancel-preserves-profile": {
+      "status": "pending",
+      "notes": ""
+    },
+    "managed-block-only": {
+      "status": "pending",
+      "notes": ""
+    },
+    "invalid-content-blocked": {
+      "status": "pending",
+      "notes": ""
+    },
+    "native-json-roundtrip": {
+      "status": "pending",
+      "notes": ""
+    },
+    "profiles-backup-restore": {
+      "status": "pending",
+      "notes": ""
+    },
+    "delete-confirmation": {
+      "status": "pending",
+      "notes": ""
+    },
+    "launch-at-login-system-setting": {
+      "status": "pending",
+      "notes": ""
+    },
+    "global-shortcut-focuses-editor": {
+      "status": "pending",
+      "notes": ""
+    },
+    "latest-backup-restore": {
+      "status": "pending",
+      "notes": ""
+    }
+  },
+  "notes": "System-level packaged-app validation has not been run yet."
+}

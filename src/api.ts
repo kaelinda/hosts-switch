@@ -28,7 +28,7 @@ const browserProfileBackupKey = "hosts-switch.browser-profile-backup";
 const browserHostsKey = "hosts-switch.browser-hosts";
 const browserHostsBackupKey = "hosts-switch.browser-hosts-backup";
 const emptyHostsApplyMessage =
-  "Current /etc/hosts is empty. Restore or confirm the system hosts file before applying changes.";
+  "Current /etc/hosts is empty. Restore a safe /etc/hosts baseline before applying changes.";
 
 const isTauri =
   typeof window !== "undefined" &&

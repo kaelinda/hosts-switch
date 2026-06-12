@@ -1073,7 +1073,7 @@ function App() {
 function describeHostsSnapshot(snapshot: HostsSnapshot): string[] {
   if (snapshot.current.trim().length === 0) {
     return [
-      "Current /etc/hosts is empty. Confirm this machine is ready before applying changes.",
+      "Current /etc/hosts is empty. Restore a safe /etc/hosts baseline before applying changes.",
     ];
   }
 
