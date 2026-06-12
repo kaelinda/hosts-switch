@@ -99,6 +99,8 @@ assertIncludes(appTsx, "hydrateGlobalShortcutPreference", "Startup global shortc
 assertIncludes(appTsx, "profileReplaceConfirmation", "Profile replacement confirmation");
 assertIncludes(appTsx, "Restore profiles cancelled", "Restore profiles cancellation handling");
 assertIncludes(appTsx, "Import cancelled", "Profile import cancellation handling");
+assertIncludes(appTsx, "deleteGroupConfirmation", "Delete group confirmation");
+assertIncludes(appTsx, "deleteNodeConfirmation", "Delete node confirmation");
 assertIncludes(systemPreferenceHydrationTs, "syncPreference(loaded)", "Startup global shortcut registration");
 assertIncludes(systemPreferenceHydrationTs, "Could not register global shortcut", "Startup global shortcut failure handling");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-fs", "Frontend dependency surface");

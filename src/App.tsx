@@ -70,6 +70,11 @@ const emptyState: AppState = {
 const profileReplaceConfirmation =
   "Replace the current profiles? Unsaved profile edits will be discarded.";
 
+const deleteGroupConfirmation =
+  "Delete this group and all of its nodes? This only changes the current draft until you save.";
+const deleteNodeConfirmation =
+  "Delete this node? This only changes the current draft until you save.";
+
 function App() {
   const [state, setState] = useState<AppState>(emptyState);
   const [persisted, setPersisted] = useState<AppState>(emptyState);
@@ -384,6 +389,10 @@ function App() {
     if (!selectedGroupId || !selectedNodeId) {
       return;
     }
+    if (!window.confirm(deleteNodeConfirmation)) {
+      setStatus("Delete node cancelled");
+      return;
+    }
     updateState((current) => ({
       ...current,
       groups: current.groups.map((group) =>
@@ -399,6 +408,10 @@ function App() {
 
   function removeSelectedGroup() {
     if (!selectedGroupId) {
+      return;
+    }
+    if (!window.confirm(deleteGroupConfirmation)) {
+      setStatus("Delete group cancelled");
       return;
     }
     updateState((current) => ({

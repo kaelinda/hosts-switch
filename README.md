@@ -6,7 +6,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 
 - macOS status-bar menu for direct hosts profile switching and per-group disable.
 - Groups and nodes with one active node per group by default.
-- Compact editor for creating, editing, deleting, reordering, and searching profiles.
+- Compact editor for creating, editing, confirmed deleting, reordering, and searching profiles.
 - Exact managed-block preview before writing `/etc/hosts`.
 - Runtime warning when the current `/etc/hosts` file is empty before applying changes.
 - Hover preview without mutating draft state.

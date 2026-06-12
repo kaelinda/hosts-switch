@@ -168,3 +168,41 @@ test("browser demo confirms before replacing profiles from JSON import", async (
   await expect(page.getByText("Profiles imported")).toBeVisible();
   await expect(page.getByRole("button", { name: "Imported Development" })).toBeVisible();
 });
+
+test("browser demo confirms before deleting nodes and groups", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /Local API/ }).click();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Delete this node?");
+    await dialog.dismiss();
+  });
+  await page.getByTitle("Delete node").click();
+  await expect(page.getByText("Delete node cancelled")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Local API/ })).toBeVisible();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("current draft");
+    await dialog.accept();
+  });
+  await page.getByTitle("Delete node").click();
+  await expect(page.getByRole("button", { name: /Local API/ })).toHaveCount(0);
+  await expect(page.getByText("Unsaved draft")).toBeVisible();
+
+  await page.getByRole("button", { name: "Examples" }).click();
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Delete this group");
+    await dialog.dismiss();
+  });
+  await page.getByTitle("Delete group").click();
+  await expect(page.getByText("Delete group cancelled")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Examples" })).toBeVisible();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("all of its nodes");
+    await dialog.accept();
+  });
+  await page.getByTitle("Delete group").click();
+  await expect(page.getByRole("button", { name: "Examples" })).toHaveCount(0);
+});

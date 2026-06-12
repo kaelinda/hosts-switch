@@ -39,6 +39,10 @@ const requiredChecks = [
     readmeText: "confirm the replacement prompt",
   },
   {
+    id: "delete-confirmation",
+    readmeText: "confirmed deleting",
+  },
+  {
     id: "launch-at-login-system-setting",
     readmeText: "System Settings reflects the login item",
   },
@@ -120,6 +124,7 @@ for (const requiredText of [localDmgName, releaseAssetName]) {
 for (const requiredText of [
   "Run `npm run verify:manual-readiness` and review its warnings.",
   "Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`; if the command refuses an empty hosts file, restore or intentionally confirm the system hosts state before continuing.",
+  "`delete-confirmation`: Deleting a node or group asks for confirmation",
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
   "Prefer `npm run record:manual-result -- --check <check-id>=pass --check-note <check-id>=\"evidence\"` when recording individual checks.",

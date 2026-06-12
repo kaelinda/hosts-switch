@@ -46,6 +46,10 @@
       "status": "pending",
       "notes": ""
     },
+    "delete-confirmation": {
+      "status": "pending",
+      "notes": ""
+    },
     "launch-at-login-system-setting": {
       "status": "pending",
       "notes": ""
