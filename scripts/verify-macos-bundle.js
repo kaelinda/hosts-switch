@@ -47,6 +47,7 @@ const defaultCapability = JSON.parse(readFileSync("src-tauri/capabilities/defaul
 const generatedCapabilities = JSON.parse(readFileSync("src-tauri/gen/schemas/capabilities.json", "utf8"));
 const libRs = readFileSync("src-tauri/src/lib.rs", "utf8");
 const traySwitchRs = readFileSync("src-tauri/src/tray_switch.rs", "utf8");
+const storeRs = readFileSync("src-tauri/src/store.rs", "utf8");
 const apiTs = readFileSync("src/api.ts", "utf8");
 const appTsx = readFileSync("src/App.tsx", "utf8");
 const systemPreferenceHydrationTs = readFileSync("src/systemPreferenceHydration.ts", "utf8");
@@ -102,6 +103,8 @@ assertIncludes(traySwitchRs, "const DISABLE_GROUP_PREFIX: &str = \"disable-group
 assertIncludes(traySwitchRs, "commands::apply_hosts_state", "Status-bar switch apply path");
 assertIncludes(traySwitchRs, "disable_group_and_apply", "Status-bar group disable apply path");
 assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
+assertIncludes(storeRs, "fn write_file_atomically", "Atomic profile persistence helper");
+assertIncludes(storeRs, "fs::rename(&temp_path, path)", "Atomic profile persistence rename");
 assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command call");
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");
 assertIncludes(apiTs, "listen<TrayStatusEvent>(\"hosts-switch://tray-status\"", "Frontend tray status listener");

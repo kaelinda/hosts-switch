@@ -45,6 +45,7 @@ assertIncludes(readme, expectedReadmePath, "README DMG path");
 assertIncludes(readme, expectedReleaseNotesPath, "README release notes path");
 assertIncludes(readme, "npm run print:hosts-recovery", "README hosts recovery command");
 assertIncludes(readme, "Single-instance guard", "README single-instance feature");
+assertIncludes(readme, "Atomic local writes", "README atomic persistence feature");
 
 const releaseTag = process.env.HOSTS_SWITCH_RELEASE_TAG;
 if (releaseTag) {
