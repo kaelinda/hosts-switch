@@ -126,7 +126,7 @@ pub fn show_main_window(app: &AppHandle) {
     }
 }
 
-pub fn switch_node(state: &mut AppState, group_id: &str, node_id: &str) -> bool {
+pub fn select_node(state: &mut AppState, group_id: &str, node_id: &str) -> bool {
     let Some(group) = state.groups.iter_mut().find(|group| group.id == group_id) else {
         return false;
     };
@@ -135,13 +135,16 @@ pub fn switch_node(state: &mut AppState, group_id: &str, node_id: &str) -> bool 
         return false;
     };
 
-    let next_enabled = !group.nodes[target_index].enabled;
-    if state.preferences.enforce_one_active_per_group && next_enabled {
+    if group.nodes[target_index].enabled {
+        return false;
+    }
+
+    if state.preferences.enforce_one_active_per_group {
         for node in &mut group.nodes {
             node.enabled = false;
         }
     }
-    group.nodes[target_index].enabled = next_enabled;
+    group.nodes[target_index].enabled = true;
     true
 }
 
@@ -168,7 +171,12 @@ fn switch_node_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
     match switch_and_apply(app, &group_id, &node_id) {
         Ok(state) => {
             refresh_menu(app, tray);
-            emit_status(app, Some(state), "Hosts switched from status menu", None);
+            emit_status(
+                app,
+                Some(state),
+                "Hosts profile selected from status menu",
+                None,
+            );
         }
         Err(error) => {
             refresh_menu(app, tray);
@@ -176,7 +184,7 @@ fn switch_node_from_menu(app: &AppHandle, tray: &TrayIcon<Wry>, id: &str) {
             emit_status(
                 app,
                 current_state,
-                "Failed to switch hosts from status menu",
+                "Failed to select hosts profile from status menu",
                 Some(error.to_string()),
             );
             show_main_window(app);
@@ -241,7 +249,7 @@ where
     F: FnOnce(AppState) -> commands::CommandResult<AppState>,
 {
     ensure_node_exists(&state, group_id, node_id)?;
-    if !switch_node(&mut state, group_id, node_id) {
+    if !select_node(&mut state, group_id, node_id) {
         return Ok(state);
     }
     apply(state)
@@ -380,23 +388,23 @@ mod tests {
     }
 
     #[test]
-    fn switches_node_and_deactivates_peer_in_same_group() {
+    fn selects_node_and_deactivates_peer_in_same_group() {
         let mut state = state();
 
-        assert!(switch_node(&mut state, "g1", "n1"));
+        assert!(select_node(&mut state, "g1", "n1"));
 
         assert!(state.groups[0].nodes[0].enabled);
         assert!(!state.groups[0].nodes[1].enabled);
     }
 
     #[test]
-    fn toggles_active_node_off() {
+    fn keeps_active_node_selected() {
         let mut state = state();
 
-        assert!(switch_node(&mut state, "g1", "n2"));
+        assert!(!select_node(&mut state, "g1", "n2"));
 
         assert!(!state.groups[0].nodes[0].enabled);
-        assert!(!state.groups[0].nodes[1].enabled);
+        assert!(state.groups[0].nodes[1].enabled);
     }
 
     #[test]
@@ -421,7 +429,7 @@ mod tests {
     fn returns_false_for_unknown_node() {
         let mut state = state();
 
-        assert!(!switch_node(&mut state, "g1", "missing"));
+        assert!(!select_node(&mut state, "g1", "missing"));
     }
 
     #[test]
@@ -432,7 +440,7 @@ mod tests {
     }
 
     #[test]
-    fn applies_switched_state_after_status_menu_selection() {
+    fn applies_selected_state_after_status_menu_selection() {
         let observed = Rc::new(RefCell::new(None::<AppState>));
         let observed_apply = Rc::clone(&observed);
 
@@ -445,6 +453,22 @@ mod tests {
         assert!(result.groups[0].nodes[0].enabled);
         assert!(!result.groups[0].nodes[1].enabled);
         assert_eq!(observed.borrow().clone().unwrap(), result);
+    }
+
+    #[test]
+    fn status_menu_selection_keeps_active_node_without_reapplying() {
+        let called = Rc::new(RefCell::new(false));
+        let called_apply = Rc::clone(&called);
+
+        let result = switch_and_apply_loaded(state(), "g1", "n2", move |next| {
+            *called_apply.borrow_mut() = true;
+            Ok(next)
+        })
+        .unwrap();
+
+        assert!(!*called.borrow());
+        assert!(!result.groups[0].nodes[0].enabled);
+        assert!(result.groups[0].nodes[1].enabled);
     }
 
     #[test]
