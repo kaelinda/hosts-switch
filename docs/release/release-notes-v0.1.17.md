@@ -35,7 +35,7 @@ Automated prerelease build for v0.1.17.
 Artifact:
 
 - Hosts.Switch_0.1.17_aarch64.dmg
-- SHA-256: pending until release publication
+- SHA-256: `f3faef43fa3f72cef2e1d39166f7d2a7d771db919a7b3169aee90e7e2feced54`
 
 Notes:
 
