@@ -13,6 +13,7 @@ Release under test:
 Before testing:
 
 - [ ] Run `npm run verify:manual-readiness` and review its warnings.
+- [ ] If `/etc/hosts` is empty or missing localhost entries, run `npm run print:hosts-recovery` and manually restore a safe hosts baseline before continuing; the command prints guidance only and does not modify `/etc/hosts`.
 - [ ] Run `npm run prepare:manual-release-asset` to download the exact GitHub release DMG and verify its SHA-256 against this result file.
 - [ ] Run `npm run prepare:manual-validation -- --write-backup` to save a copy of the current `/etc/hosts` and record `hostsBeforeSha256`; if the command refuses an empty hosts file, restore or intentionally confirm the system hosts state before continuing.
 - [ ] Confirm no unrelated Hosts Switch instance is running.

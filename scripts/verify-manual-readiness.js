@@ -112,7 +112,9 @@ function inspectHostsContent(hosts) {
     .filter((line) => line.length > 0 && !line.startsWith("#"));
 
   if (hosts.length === 0) {
-    warnings.push(`${hostsPath} is empty; confirm this is expected before testing hosts writes`);
+    warnings.push(
+      `${hostsPath} is empty; run npm run print:hosts-recovery for read-only recovery guidance before testing hosts writes`,
+    );
     return warnings;
   }
 
@@ -138,7 +140,7 @@ function runSelfTest() {
     {
       name: "empty hosts warns",
       hosts: "",
-      expected: ["is empty"],
+      expected: ["is empty", "npm run print:hosts-recovery"],
     },
     {
       name: "comment-only hosts warns",

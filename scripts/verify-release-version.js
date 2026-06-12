@@ -43,6 +43,7 @@ assertIncludes(
 );
 assertIncludes(readme, expectedReadmePath, "README DMG path");
 assertIncludes(readme, expectedReleaseNotesPath, "README release notes path");
+assertIncludes(readme, "npm run print:hosts-recovery", "README hosts recovery command");
 
 const releaseTag = process.env.HOSTS_SWITCH_RELEASE_TAG;
 if (releaseTag) {

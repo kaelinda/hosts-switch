@@ -13,6 +13,8 @@
     "prepare:manual-release-asset:self-test": "node scripts/prepare-manual-release-asset.js --self-test",
     "prepare:manual-validation": "node scripts/prepare-manual-validation.js",
     "prepare:manual-validation:self-test": "node scripts/prepare-manual-validation.js --self-test",
+    "print:hosts-recovery": "node scripts/print-hosts-recovery.js",
+    "print:hosts-recovery:self-test": "node scripts/print-hosts-recovery.js --self-test",
     "record:manual-result": "node scripts/record-manual-validation-result.js",
     "record:manual-result:self-test": "node scripts/record-manual-validation-result.js --self-test",
     "verify:bundle": "node scripts/verify-macos-bundle.js",

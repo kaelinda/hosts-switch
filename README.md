@@ -88,6 +88,7 @@ Run `npm run verify:release-assets` to confirm the GitHub release assets, `dmg.s
 Run `npm run prepare:manual-release-asset` to download and SHA-256 verify the exact GitHub release DMG into `manual-validation-artifacts/` before packaged-app testing.
 Release notes are maintained in `docs/release/release-notes-v0.1.14.md`; `npm run verify:release-notes` checks that the Chinese version notes, asset name, manual-validation warning, and SHA-256 line stay ready for publication.
 Run `npm run verify:manual-readiness` before touching the packaged app; it is read-only and checks the checklist, local/release asset names, `/etc/hosts` readability, and whether another Hosts Switch instance appears to be running.
+If `/etc/hosts` is empty or missing localhost entries, run `npm run print:hosts-recovery` to print a read-only recovery guide with the recommended default macOS hosts content and manual sudo commands.
 Run `npm run prepare:manual-validation` to print the current `/etc/hosts` SHA-256 and suggested backup path. Add `-- --write-backup` to copy `/etc/hosts` to that backup path before packaged-app testing. Empty `/etc/hosts` backups are refused by default; only add `-- --write-backup --allow-empty-hosts-backup` when an empty system hosts file is intentional.
 Run `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>="evidence"` to update the structured result after each manual check; pass/fail checks must include evidence notes, and the command re-runs `npm run verify:manual-result` after writing.
 
