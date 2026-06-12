@@ -34,12 +34,18 @@ for (const [label, text] of [
   ["recording help", help],
 ]) {
   assertIncludes(text, "--check-note", label);
+  assertIncludes(text, "--set-environment-current", label);
   assertIncludes(text, "evidence", label);
 }
 
 assertIncludes(
   help,
   "--check-note <id=note>                Set evidence notes for one manual check. Required for pass/fail checks. Repeatable.",
+  "recording help",
+);
+assertIncludes(
+  help,
+  "--set-environment-current             Record the current macOS version and hardware model.",
   "recording help",
 );
 

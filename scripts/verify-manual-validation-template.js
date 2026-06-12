@@ -133,7 +133,7 @@ for (const requiredText of [
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
   "Run `npm run prepare:manual-release-asset` before packaged-app testing to avoid validating a different local DMG build.",
-  "Prefer `npm run record:manual-result -- --check <check-id>=pass --check-note <check-id>=\"evidence\"` when recording individual checks.",
+  "Prefer `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>=\"evidence\"` when recording individual checks.",
   "Record evidence notes for every pass/fail check; pending checks may keep empty notes.",
   "Re-run `npm run prepare:manual-validation` and record `hostsAfterRestoredSha256`.",
   "Restore the original `/etc/hosts` if it was changed.",

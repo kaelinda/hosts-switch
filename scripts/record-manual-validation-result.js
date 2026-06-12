@@ -42,6 +42,7 @@ function parseArgs(argv) {
     checkNotes: [],
     setHostsBeforeCurrent: false,
     setHostsAfterCurrent: false,
+    setEnvironmentCurrent: false,
     dryRun: false,
     selfTest: false,
   };
@@ -80,6 +81,8 @@ function parseArgs(argv) {
       options.setHostsBeforeCurrent = true;
     } else if (arg === "--set-hosts-after-current") {
       options.setHostsAfterCurrent = true;
+    } else if (arg === "--set-environment-current") {
+      options.setEnvironmentCurrent = true;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
     } else if (arg === "--self-test") {
@@ -99,6 +102,7 @@ function printHelp() {
   console.log(`Usage:
   npm run record:manual-result -- --check status-bar-open-editor=pass --check-note status-bar-open-editor="opened from status-bar icon"
   npm run record:manual-result -- --status pass --tester "Name" --date 2026-06-12 --macos "macOS 15.5" --hardware "Apple Silicon" --hosts-before <sha256> --hosts-after <sha256>
+  npm run record:manual-result -- --set-environment-current --set-hosts-before-current
 
 Options:
   --check <id=pass|fail|pending>        Set one manual check status. Repeatable.
@@ -112,6 +116,7 @@ Options:
   --hosts-after <sha256>                Set hostsAfterRestoredSha256.
   --set-hosts-before-current            Read current /etc/hosts and use its SHA-256 as hostsBeforeSha256.
   --set-hosts-after-current             Read current /etc/hosts and use its SHA-256 as hostsAfterRestoredSha256.
+  --set-environment-current             Record the current macOS version and hardware model.
   --notes <text>                        Set top-level notes.
   --dry-run                             Print the updated JSON without writing.
   --self-test                           Run script logic self-tests.
@@ -138,6 +143,30 @@ function assertSha256(value, label) {
 
 function currentHostsSha256() {
   return createHash("sha256").update(readFileSync(hostsPath)).digest("hex");
+}
+
+function runSystemInfo(command, args) {
+  try {
+    return execFileSync(command, args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch (error) {
+    fail(`failed to read current environment using ${command} ${args.join(" ")}: ${error}`);
+  }
+}
+
+function currentEnvironment() {
+  const productName = runSystemInfo("sw_vers", ["-productName"]);
+  const productVersion = runSystemInfo("sw_vers", ["-productVersion"]);
+  const buildVersion = runSystemInfo("sw_vers", ["-buildVersion"]);
+  const hardwareModel = runSystemInfo("sysctl", ["-n", "hw.model"]);
+  const architecture = runSystemInfo("uname", ["-m"]);
+
+  return {
+    macOS: `${productName} ${productVersion} (${buildVersion})`,
+    hardware: `${hardwareModel} ${architecture}`,
+  };
 }
 
 function deriveStatus(checks) {
@@ -175,7 +204,12 @@ function verifyResult() {
   });
 }
 
-function buildNextResult(result, options, readCurrentHostsSha256 = currentHostsSha256) {
+function buildNextResult(
+  result,
+  options,
+  readCurrentHostsSha256 = currentHostsSha256,
+  readCurrentEnvironment = currentEnvironment,
+) {
   if (result.version !== version || result.tag !== tag) {
     fail(`manual result version/tag mismatch: ${result.version} ${result.tag}`);
   }
@@ -218,6 +252,11 @@ function buildNextResult(result, options, readCurrentHostsSha256 = currentHostsS
   }
   if (options.date !== undefined) {
     next.date = options.date;
+  }
+  if (options.setEnvironmentCurrent) {
+    const environment = readCurrentEnvironment();
+    next.environment.macOS = environment.macOS;
+    next.environment.hardware = environment.hardware;
   }
   if (options.macos !== undefined) {
     next.environment.macOS = options.macos;
@@ -354,6 +393,48 @@ function runSelfTest() {
     () => digest,
   );
   assertEqual(allPass.status, "pass", "all pass status");
+
+  const environment = buildNextResult(
+    sampleResult(),
+    {
+      checks: [],
+      checkNotes: [],
+      setEnvironmentCurrent: true,
+    },
+    () => digest,
+    () => ({
+      macOS: "macOS 15.5 (24F74)",
+      hardware: "Mac16,1 arm64",
+    }),
+  );
+  assertEqual(environment.environment.macOS, "macOS 15.5 (24F74)", "current macOS");
+  assertEqual(environment.environment.hardware, "Mac16,1 arm64", "current hardware");
+
+  const explicitEnvironment = buildNextResult(
+    sampleResult(),
+    {
+      checks: [],
+      checkNotes: [],
+      setEnvironmentCurrent: true,
+      macos: "macOS override",
+      hardware: "Hardware override",
+    },
+    () => digest,
+    () => ({
+      macOS: "macOS 15.5 (24F74)",
+      hardware: "Mac16,1 arm64",
+    }),
+  );
+  assertEqual(
+    explicitEnvironment.environment.macOS,
+    "macOS override",
+    "explicit macOS overrides current macOS",
+  );
+  assertEqual(
+    explicitEnvironment.environment.hardware,
+    "Hardware override",
+    "explicit hardware overrides current hardware",
+  );
 
   expectThrows("missing tester", () =>
     buildNextResult(sampleResult(), {

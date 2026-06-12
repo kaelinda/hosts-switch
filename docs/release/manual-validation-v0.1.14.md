@@ -49,7 +49,7 @@ Result:
 Structured result:
 
 - Update `docs/release/manual-validation-v0.1.14.result.json` with the same outcome.
-- Prefer `npm run record:manual-result -- --check <check-id>=pass --check-note <check-id>="evidence"` when recording individual checks.
+- Prefer `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>="evidence"` when recording individual checks.
 - Record evidence notes for every pass/fail check; pending checks may keep empty notes.
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
 - Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.
