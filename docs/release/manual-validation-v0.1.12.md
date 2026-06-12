@@ -25,7 +25,7 @@ Manual checks:
 - [ ] `admin-cancel-preserves-profile`: Cancelling that administrator prompt leaves the saved active profile unchanged.
 - [ ] `managed-block-only`: Applying a valid node changes only the Hosts Switch managed block in `/etc/hosts`.
 - [ ] `invalid-content-blocked`: Invalid enabled hosts content blocks editor Apply and status-bar switching before any write.
-- [ ] `native-json-roundtrip`: Export profiles to JSON and import the same JSON back through native dialogs.
+- [ ] `native-json-roundtrip`: Export profiles to JSON and import the same JSON back through native dialogs; importing asks for confirmation, cancelling leaves current profiles unchanged, and confirming replaces profiles.
 - [ ] `launch-at-login-system-setting`: Toggling Launch at login is reflected in macOS System Settings.
 - [ ] `global-shortcut-focuses-editor`: Toggling Global shortcut on lets `CommandOrControl+Shift+H` open and focus the editor.
 - [ ] `latest-backup-restore`: Restore Latest Backup asks for confirmation, cancelling leaves `/etc/hosts` unchanged, and confirming restores the previously backed-up hosts file only after intentionally testing Apply.

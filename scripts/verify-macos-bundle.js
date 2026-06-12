@@ -96,6 +96,9 @@ assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import comma
 assertIncludes(apiTs, "listen<TrayStatusEvent>(\"hosts-switch://tray-status\"", "Frontend tray status listener");
 assertIncludes(apiTs, "CommandOrControl+Shift+H", "Frontend global shortcut binding");
 assertIncludes(appTsx, "hydrateGlobalShortcutPreference", "Startup global shortcut hydration");
+assertIncludes(appTsx, "profileReplaceConfirmation", "Profile replacement confirmation");
+assertIncludes(appTsx, "Restore profiles cancelled", "Restore profiles cancellation handling");
+assertIncludes(appTsx, "Import cancelled", "Profile import cancellation handling");
 assertIncludes(systemPreferenceHydrationTs, "syncPreference(loaded)", "Startup global shortcut registration");
 assertIncludes(systemPreferenceHydrationTs, "Could not register global shortcut", "Startup global shortcut failure handling");
 assertNotIncludes(apiTs, "@tauri-apps/plugin-fs", "Frontend dependency surface");

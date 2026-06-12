@@ -36,7 +36,7 @@ const requiredChecks = [
   },
   {
     id: "native-json-roundtrip",
-    readmeText: "native dialogs",
+    readmeText: "confirm the replacement prompt",
   },
   {
     id: "launch-at-login-system-setting",

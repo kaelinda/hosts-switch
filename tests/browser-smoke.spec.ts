@@ -136,3 +136,35 @@ test("browser demo confirms before restoring the latest hosts backup", async ({ 
     )
     .toBe("127.0.0.1 backup.local\n");
 });
+
+test("browser demo confirms before replacing profiles from JSON import", async ({ page }) => {
+  await page.goto("/");
+
+  const exported = await page.getByTitle("Export profiles JSON").click().then(async () => {
+    await expect(page.getByRole("dialog")).toBeVisible();
+    return page.locator(".profile-json").inputValue();
+  });
+  const imported = JSON.parse(exported);
+  imported.groups[0].name = "Imported Development";
+  await page.getByTitle("Close").click();
+
+  await page.getByTitle("Import profiles JSON").click();
+  await page.locator(".profile-json").fill(JSON.stringify(imported));
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Replace the current profiles?");
+    await dialog.dismiss();
+  });
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await expect(page.getByText("Import cancelled")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Development" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imported Development" })).toHaveCount(0);
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Unsaved profile edits will be discarded");
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await expect(page.getByText("Profiles imported")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imported Development" })).toBeVisible();
+});

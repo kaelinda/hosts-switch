@@ -14,7 +14,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Safe managed block that preserves unmanaged `/etc/hosts` content.
 - Latest `/etc/hosts` backup before Apply and confirmed backup restore.
 - Restore editable profiles from an existing managed block.
-- Native JSON file import/export for profile migration, plus browser demo copy/paste fallback.
+- Confirmed JSON file import/export for profile migration, plus browser demo copy/paste fallback.
 - Launch at login toggle backed by a macOS LaunchAgent.
 - Global editor shortcut: `CommandOrControl+Shift+H`.
 - DMG and `.app` bundle output for local distribution.
@@ -96,7 +96,7 @@ Run `npm run record:manual-result -- --check <check-id>=pass --check-note <check
 - Confirm cancelling the administrator prompt leaves the saved active profile unchanged.
 - Apply a valid node and confirm only the managed block changes in `/etc/hosts`.
 - Add invalid enabled hosts content and confirm Apply/status-bar switching is blocked.
-- Export profiles to JSON and import the same JSON back through the native dialogs.
+- Export profiles to JSON and import the same JSON back through the native dialogs; confirm the replacement prompt and verify cancelling it leaves current profiles unchanged.
 - Toggle Launch at login and confirm System Settings reflects the login item.
 - Toggle Global shortcut and confirm `CommandOrControl+Shift+H` opens/focuses the editor.
 - Restore the latest hosts backup only after intentionally testing Apply; confirm the restore prompt and verify cancelling it leaves `/etc/hosts` unchanged.

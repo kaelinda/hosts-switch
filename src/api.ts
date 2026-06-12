@@ -147,9 +147,13 @@ export async function importProfiles(raw: string): Promise<AppState> {
     return invoke<AppState>("import_profiles", { raw });
   }
 
-  const normalized = normalizeState(JSON.parse(raw) as AppState);
+  const normalized = parseProfilesJson(raw);
   window.localStorage.setItem(browserStoreKey, JSON.stringify(normalized));
   return normalized;
+}
+
+export function parseProfilesJson(raw: string): AppState {
+  return normalizeState(JSON.parse(raw) as AppState);
 }
 
 export function supportsNativeProfileFiles(): boolean {

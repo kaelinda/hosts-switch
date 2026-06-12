@@ -33,6 +33,7 @@ import {
   loadAppState,
   listenToTrayStatus,
   openEditorShortcut,
+  parseProfilesJson,
   previewHosts,
   readGlobalShortcutStatus,
   readLaunchAtLoginStatus,
@@ -65,6 +66,9 @@ const emptyState: AppState = {
     enableGlobalShortcut: true,
   },
 };
+
+const profileReplaceConfirmation =
+  "Replace the current profiles? Unsaved profile edits will be discarded.";
 
 function App() {
   const [state, setState] = useState<AppState>(emptyState);
@@ -467,6 +471,11 @@ function App() {
   }
 
   async function restoreProfiles() {
+    if (!window.confirm(profileReplaceConfirmation)) {
+      setStatus("Restore profiles cancelled");
+      return;
+    }
+
     await runCommand("Profiles restored from /etc/hosts", async () => {
       clearHoverPreviewState();
       const restored = await restoreProfilesFromHosts();
@@ -513,6 +522,11 @@ function App() {
 
   async function openImportProfiles() {
     if (supportsNativeProfileFiles()) {
+      if (!window.confirm(profileReplaceConfirmation)) {
+        setStatus("Import cancelled");
+        return;
+      }
+
       await runCommand("Profiles imported from file", async () => {
         clearHoverPreviewState();
         const imported = await importProfilesFromFile();
@@ -536,6 +550,19 @@ function App() {
   }
 
   async function confirmImportProfiles() {
+    try {
+      parseProfilesJson(profileJson);
+    } catch (error) {
+      setError(String(error));
+      setStatus("Import failed");
+      return;
+    }
+
+    if (!window.confirm(profileReplaceConfirmation)) {
+      setStatus("Import cancelled");
+      return;
+    }
+
     await runCommand("Profiles imported", async () => {
       clearHoverPreviewState();
       const imported = await importProfiles(profileJson);
