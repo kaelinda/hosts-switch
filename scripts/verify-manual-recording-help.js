@@ -38,6 +38,15 @@ for (const [label, text] of [
   assertIncludes(text, "evidence", label);
 }
 
+for (const requiredCheckId of [
+  "status-bar-admin-prompt",
+  "profiles-backup-restore",
+  "latest-backup-restore",
+]) {
+  assertIncludes(checklist, requiredCheckId, "manual checklist");
+  assertIncludes(help, requiredCheckId, "recording help");
+}
+
 assertIncludes(
   help,
   "--check-note <id=note>                Set evidence notes for one manual check. Required for pass/fail checks. Repeatable.",

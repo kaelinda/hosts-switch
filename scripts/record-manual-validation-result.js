@@ -18,6 +18,7 @@ const requiredChecks = [
   "managed-block-only",
   "invalid-content-blocked",
   "native-json-roundtrip",
+  "profiles-backup-restore",
   "delete-confirmation",
   "launch-at-login-system-setting",
   "global-shortcut-focuses-editor",
@@ -121,6 +122,9 @@ Options:
   --notes <text>                        Set top-level notes.
   --dry-run                             Print the updated JSON without writing.
   --self-test                           Run script logic self-tests.
+
+Known check IDs:
+${requiredChecks.map((checkId) => `  - ${checkId}`).join("\n")}
 `);
 }
 
@@ -356,7 +360,19 @@ function assertEqual(actual, expected, label) {
   }
 }
 
+function assertIncludes(values, expected, label) {
+  if (!values.includes(expected)) {
+    fail(`${label} missing ${expected}`);
+  }
+}
+
 function runSelfTest() {
+  assertIncludes(
+    requiredChecks,
+    "profiles-backup-restore",
+    "manual result recorder check ids",
+  );
+
   const onePass = buildNextResult(sampleResult(), {
     checks: [["status-bar-open-editor", "pass"]],
     checkNotes: [["status-bar-open-editor", "opened from menu bar"]],

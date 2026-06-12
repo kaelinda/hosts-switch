@@ -131,6 +131,10 @@ if (!readme.includes("npm run record:manual-result")) {
   fail("README missing manual result recording command");
 }
 
+if (!readme.includes("npm run record:manual-result -- --help")) {
+  fail("README missing manual result recording help command");
+}
+
 for (const requiredText of [localDmgName, releaseAssetName]) {
   if (!readme.includes(requiredText)) {
     fail(`README missing DMG name ${JSON.stringify(requiredText)}`);
@@ -147,6 +151,7 @@ for (const requiredText of [
   "Run `npm run sync:manual-release` after the prerelease is published to refresh artifact metadata.",
   "Run `npm run verify:release-assets` to verify the GitHub release asset and `dmg.sha256`.",
   "Run `npm run prepare:manual-release-asset` before packaged-app testing to avoid validating a different local DMG build.",
+  "Run `npm run record:manual-result -- --help` to list valid check IDs before recording evidence.",
   "Prefer `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>=\"evidence\"` when recording individual checks.",
   "Record evidence notes for every pass/fail check; pending checks may keep empty notes.",
   "Re-run `npm run prepare:manual-validation` and record `hostsAfterRestoredSha256`.",

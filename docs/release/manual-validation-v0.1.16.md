@@ -52,6 +52,7 @@ Result:
 Structured result:
 
 - Update `docs/release/manual-validation-v0.1.16.result.json` with the same outcome.
+- Run `npm run record:manual-result -- --help` to list valid check IDs before recording evidence.
 - Prefer `npm run record:manual-result -- --set-environment-current --check <check-id>=pass --check-note <check-id>="evidence"` when recording individual checks.
 - Record evidence notes for every pass/fail check; pending checks may keep empty notes.
 - Keep the recorded release asset SHA-256 and tag commit tied to the artifact actually tested.
