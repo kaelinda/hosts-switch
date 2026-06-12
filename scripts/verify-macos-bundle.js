@@ -89,6 +89,11 @@ assertIncludes(
   "crate::tray_switch::show_main_window(app)",
   "Single-instance editor focus behavior",
 );
+assertIncludes(libRs, ".on_window_event", "Main window close handler registration");
+assertIncludes(libRs, "hide_main_window_on_close", "Main window close-to-hide handler");
+assertIncludes(libRs, "WindowEvent::CloseRequested", "Main window close request handling");
+assertIncludes(libRs, "api.prevent_close()", "Main window close prevention");
+assertIncludes(libRs, "window.hide()", "Main window hide on close");
 assertIncludes(libRs, ".show_menu_on_left_click(false)", "Status-bar click behavior");
 assertIncludes(libRs, ".on_menu_event", "Status-bar menu event handler");
 assertIncludes(libRs, "tray_switch::handle_menu_event", "Status-bar menu dispatcher");

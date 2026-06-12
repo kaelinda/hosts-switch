@@ -4,8 +4,8 @@ mod models;
 mod store;
 mod tray_switch;
 
-use tauri::AppHandle;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{AppHandle, WindowEvent};
 
 pub fn run() {
     tauri::Builder::default()
@@ -18,6 +18,11 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             crate::tray_switch::show_main_window(app);
         }))
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                hide_main_window_on_close(window, event);
+            }
+        })
         .setup(|app| {
             build_tray(app.handle())?;
             Ok(())
@@ -67,4 +72,11 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         .build(app)?;
 
     Ok(())
+}
+
+fn hide_main_window_on_close(window: &tauri::Window, event: &WindowEvent) {
+    if let WindowEvent::CloseRequested { api, .. } = event {
+        api.prevent_close();
+        let _ = window.hide();
+    }
 }

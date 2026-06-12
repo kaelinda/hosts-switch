@@ -20,6 +20,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Launch at login toggle backed by a macOS LaunchAgent.
 - Global editor shortcut: `CommandOrControl+Shift+H`.
 - Single-instance guard so opening the app again focuses the existing editor instead of creating another status-bar item.
+- Closing the editor window hides it instead of destroying it, so the status-bar icon can reopen it.
 - DMG and `.app` bundle output for local distribution.
 
 ## Safety Model
@@ -75,6 +76,7 @@ Current bundle outputs:
 - Bundle metadata, version, identifier, icon, executable, and arm64 Mach-O output.
 - `LSUIElement=true`, so the app runs as a status-bar utility.
 - Main editor window is configured as `visible=false` on launch.
+- Closing the main editor window is intercepted and hides the window instead of destroying it.
 - Tauri global API is disabled in the WebView.
 - Status-bar tray setup and required native commands are registered.
 - Single-instance plugin is registered to focus the existing editor on a second launch.
