@@ -14,6 +14,7 @@ const QUIT_ID: &str = "quit";
 const STALE_MENU_GROUP_MESSAGE: &str =
     "Status menu group is stale. Refresh the menu and try again.";
 const STALE_MENU_NODE_MESSAGE: &str = "Status menu node is stale. Refresh the menu and try again.";
+const PROFILES_UNAVAILABLE_ID: &str = "profiles-unavailable";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,44 +24,54 @@ struct TraySwitchEvent {
     error: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MenuModel {
+    profile_items: Vec<MenuProfileItem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MenuProfileItem {
+    id: String,
+    label: String,
+    enabled: bool,
+    checked: bool,
+    details: Option<String>,
+    children: Vec<MenuProfileItem>,
+}
+
 pub fn build_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
-    let state = load_state_for_menu(app);
+    let load_result = store::load_state(app);
+    let model = menu_model_from_load_result(load_result);
     let mut builder = MenuBuilder::new(app);
 
-    if state.groups.is_empty() {
-        let empty = MenuItemBuilder::with_id("empty-profiles", "No profiles")
-            .enabled(false)
-            .build(app)?;
-        builder = builder.item(&empty);
-    } else {
-        for group in &state.groups {
-            let mut group_builder =
-                SubmenuBuilder::with_id(app, format!("group:{}", group.id), &group.name);
+    for item in &model.profile_items {
+        if item.children.is_empty() {
+            let mut label = item.label.clone();
+            if let Some(details) = &item.details {
+                label.push_str(": ");
+                label.push_str(details);
+            }
+            let menu_item = MenuItemBuilder::with_id(&item.id, label)
+                .enabled(item.enabled)
+                .build(app)?;
+            builder = builder.item(&menu_item);
+        } else {
+            let mut group_builder = SubmenuBuilder::with_id(app, &item.id, &item.label);
+            let no_active_index = item
+                .children
+                .iter()
+                .position(|child| child.id.starts_with(DISABLE_GROUP_PREFIX));
 
-            if group.nodes.is_empty() {
-                let empty =
-                    MenuItemBuilder::with_id(format!("empty-group:{}", group.id), "No nodes")
-                        .enabled(false)
-                        .build(app)?;
-                group_builder = group_builder.item(&empty);
-            } else {
-                for node in &group.nodes {
-                    let item = CheckMenuItemBuilder::with_id(
-                        switch_item_id(&group.id, &node.id),
-                        &node.name,
-                    )
-                    .checked(node.enabled)
-                    .build(app)?;
-                    group_builder = group_builder.item(&item);
+            for (index, child) in item.children.iter().enumerate() {
+                if Some(index) == no_active_index {
+                    group_builder = group_builder.separator();
                 }
 
-                let no_active_item = CheckMenuItemBuilder::with_id(
-                    disable_group_item_id(&group.id),
-                    "No Active Node",
-                )
-                .checked(group.nodes.iter().all(|node| !node.enabled))
-                .build(app)?;
-                group_builder = group_builder.separator().item(&no_active_item);
+                let child_item = CheckMenuItemBuilder::with_id(&child.id, &child.label)
+                    .checked(child.checked)
+                    .enabled(child.enabled)
+                    .build(app)?;
+                group_builder = group_builder.item(&child_item);
             }
 
             let submenu = group_builder.build()?;
@@ -300,10 +311,84 @@ fn ensure_group_exists(state: &AppState, group_id: &str) -> commands::CommandRes
     ))
 }
 
-fn load_state_for_menu(app: &AppHandle) -> AppState {
-    match store::load_state(app) {
-        Ok(state) => state,
-        Err(_) => AppState::default(),
+fn menu_model_from_load_result(load_result: commands::CommandResult<AppState>) -> MenuModel {
+    match load_result {
+        Ok(state) => menu_model_from_state(&state),
+        Err(error) => MenuModel {
+            profile_items: vec![MenuProfileItem {
+                id: PROFILES_UNAVAILABLE_ID.to_string(),
+                label: "Profiles unavailable".to_string(),
+                enabled: false,
+                checked: false,
+                details: Some(error.to_string()),
+                children: Vec::new(),
+            }],
+        },
+    }
+}
+
+fn menu_model_from_state(state: &AppState) -> MenuModel {
+    if state.groups.is_empty() {
+        return MenuModel {
+            profile_items: vec![MenuProfileItem {
+                id: "empty-profiles".to_string(),
+                label: "No profiles".to_string(),
+                enabled: false,
+                checked: false,
+                details: None,
+                children: Vec::new(),
+            }],
+        };
+    }
+
+    MenuModel {
+        profile_items: state
+            .groups
+            .iter()
+            .map(|group| {
+                let children = if group.nodes.is_empty() {
+                    vec![MenuProfileItem {
+                        id: format!("empty-group:{}", group.id),
+                        label: "No nodes".to_string(),
+                        enabled: false,
+                        checked: false,
+                        details: None,
+                        children: Vec::new(),
+                    }]
+                } else {
+                    let mut children: Vec<MenuProfileItem> = group
+                        .nodes
+                        .iter()
+                        .map(|node| MenuProfileItem {
+                            id: switch_item_id(&group.id, &node.id),
+                            label: node.name.clone(),
+                            enabled: true,
+                            checked: node.enabled,
+                            details: None,
+                            children: Vec::new(),
+                        })
+                        .collect();
+                    children.push(MenuProfileItem {
+                        id: disable_group_item_id(&group.id),
+                        label: "No Active Node".to_string(),
+                        enabled: true,
+                        checked: group.nodes.iter().all(|node| !node.enabled),
+                        details: None,
+                        children: Vec::new(),
+                    });
+                    children
+                };
+
+                MenuProfileItem {
+                    id: format!("group:{}", group.id),
+                    label: group.name.clone(),
+                    enabled: true,
+                    checked: false,
+                    details: None,
+                    children,
+                }
+            })
+            .collect(),
     }
 }
 
@@ -609,5 +694,25 @@ mod tests {
         );
         assert_eq!(parse_disable_group_item_id("disable-group:"), None);
         assert_eq!(parse_disable_group_item_id("show"), None);
+    }
+
+    #[test]
+    fn status_menu_model_surfaces_profile_load_failures_without_default_profiles() {
+        let error = CommandError::Path("profile directory is not readable".to_string());
+
+        let model = menu_model_from_load_result(Err(error));
+
+        assert_eq!(model.profile_items.len(), 1);
+        assert_eq!(model.profile_items[0].id, PROFILES_UNAVAILABLE_ID);
+        assert_eq!(model.profile_items[0].label, "Profiles unavailable");
+        assert!(!model.profile_items[0].enabled);
+        assert!(
+            model.profile_items[0]
+                .details
+                .as_deref()
+                .unwrap()
+                .contains("profile directory is not readable")
+        );
+        assert!(model.profile_items[0].children.is_empty());
     }
 }

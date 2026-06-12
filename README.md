@@ -17,6 +17,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Latest saved profiles backup before profile replacement, plus confirmed profile backup restore.
 - Atomic local writes for saved profiles, latest profile backup, and latest hosts backup files.
 - Native saved-profile recovery: if `profiles.json` is corrupted, the app restores the latest profiles backup or preserves the corrupted file before recreating defaults.
+- Status-bar profile load failures are surfaced as a disabled menu item with the load error instead of silently showing default profiles.
 - Restore editable profiles from an existing managed block.
 - Confirmed JSON file import/export for profile migration, plus browser demo copy/paste fallback.
 - Launch at login toggle backed by a macOS LaunchAgent.
@@ -43,6 +44,8 @@ If the current `/etc/hosts` file is empty, Apply and status-bar switching are bl
 Saved profiles, latest profile backup, and latest hosts backup are written through same-directory temporary files and atomic rename, so a crash during local persistence does not leave a half-written JSON or backup file.
 
 If the native saved-profile store cannot be parsed, the app first tries to restore `backups/profiles-last-backup.json` into `profiles.json`. If no usable backup exists, it keeps a `profiles.json.corrupt-*` copy and recreates the default profiles so the menu-bar app can keep opening.
+
+If the status-bar menu cannot load saved profiles because the native store is unavailable, it shows a disabled `Profiles unavailable` item with the load error and keeps Refresh Menu, Open Editor, and Quit available instead of switching against fallback sample profiles.
 
 ## Development
 
@@ -87,6 +90,7 @@ Current bundle outputs:
 - Native profile import/export commands are used from the frontend.
 - Profile replacement writes a latest profiles backup and exposes a confirmed restore action.
 - Corrupted native profile stores recover from the latest profiles backup or preserve a `.corrupt-*` copy before defaults are recreated.
+- Status-bar profile load failures surface a disabled unavailable state instead of silently falling back to default profiles.
 - WebView capabilities do not grant dialog open/save or filesystem text-file permissions.
 - The frontend does not import Tauri dialog or filesystem plugins directly.
 

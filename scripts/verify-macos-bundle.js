@@ -114,6 +114,9 @@ assertIncludes(traySwitchRs, "ensure_node_exists(&state, group_id, node_id)", "S
 assertIncludes(traySwitchRs, "ensure_group_exists(&state, group_id)", "Status-bar stale group guard");
 assertIncludes(traySwitchRs, "STALE_MENU_NODE_MESSAGE", "Status-bar stale node error");
 assertIncludes(traySwitchRs, "STALE_MENU_GROUP_MESSAGE", "Status-bar stale group error");
+assertIncludes(traySwitchRs, "PROFILES_UNAVAILABLE_ID", "Status-bar unavailable profile state ID");
+assertIncludes(traySwitchRs, "\"Profiles unavailable\"", "Status-bar unavailable profile state label");
+assertIncludes(traySwitchRs, "fn menu_model_from_load_result", "Status-bar profile load result model");
 assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
 assertIncludes(storeRs, "fn write_file_atomically", "Atomic profile persistence helper");
 assertIncludes(storeRs, "fs::rename(&temp_path, path)", "Atomic profile persistence rename");
