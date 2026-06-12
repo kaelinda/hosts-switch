@@ -276,7 +276,7 @@ fn emit_status(app: &AppHandle, state: Option<AppState>, status: &str, error: Op
 }
 
 fn switch_item_id(group_id: &str, node_id: &str) -> String {
-    format!("{SWITCH_PREFIX}{}:{group_id}{node_id}", group_id.len())
+    format!("{SWITCH_PREFIX}{}:{group_id}:{node_id}", group_id.len())
 }
 
 fn disable_group_item_id(group_id: &str) -> String {
@@ -287,8 +287,17 @@ fn parse_switch_item_id(id: &str) -> Option<(String, String)> {
     let rest = id.strip_prefix(SWITCH_PREFIX)?;
     let (group_len_raw, payload) = rest.split_once(':')?;
     let group_len = group_len_raw.parse::<usize>().ok()?;
+    if !payload.is_char_boundary(group_len) {
+        return None;
+    }
     let group_id = payload.get(..group_len)?.to_string();
-    let node_id = payload.get(group_len..)?.to_string();
+    let node_id = payload
+        .get(group_len..)?
+        .strip_prefix(':')?
+        .to_string();
+    if node_id.is_empty() {
+        return None;
+    }
     Some((group_id, node_id))
 }
 
@@ -488,8 +497,15 @@ mod tests {
             parse_switch_item_id(&id_with_separator),
             Some(("group:a".to_string(), "node:b".to_string()))
         );
+        let id_with_unicode = switch_item_id("研发:一组", "节点:本地");
+        assert_eq!(
+            parse_switch_item_id(&id_with_unicode),
+            Some(("研发:一组".to_string(), "节点:本地".to_string()))
+        );
         assert_eq!(parse_switch_item_id("show"), None);
         assert_eq!(parse_switch_item_id("switch-node:9:short"), None);
+        assert_eq!(parse_switch_item_id("switch-node:1:研发:一组:节点"), None);
+        assert_eq!(parse_switch_item_id("switch-node:7:group-a"), None);
     }
 
     #[test]
