@@ -122,6 +122,8 @@ jobs:
             - 启用 hosts 内容校验，非法 IP/hostname 会在写入前被拦截。
             - 支持 JSON 配置导入/导出、登录项开关、全局快捷键打开编辑器、最近 hosts 备份恢复。
             - 当当前 `/etc/hosts` 或最近备份为空时，默认阻止应用/恢复，避免把异常空 hosts 状态写回系统。
+            - 手动验证准备脚本默认拒绝为空的 `/etc/hosts` 写备份，避免把异常初始状态作为验收基线。
+            - Release workflow 会挂载 DMG 并校验其中的 `Hosts Switch.app` 元数据和 arm64 可执行文件。
 
             使用前请注意：
             - 该 DMG 未签名、未公证，首次打开可能需要在 macOS 安全设置中确认。
