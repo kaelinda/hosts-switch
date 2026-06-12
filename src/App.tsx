@@ -107,6 +107,7 @@ function App() {
     (issue) => issue.nodeId === selectedNodeId,
   );
   const applyBlocked = validationIssues.length > 0;
+  const hostsSafetyBlocked = snapshot?.current.trim().length === 0;
   const isHoverPreviewing = hoverPreviewTarget !== null;
   const activeCount = state.groups.reduce(
     (total, group) => total + group.nodes.filter((node) => node.enabled).length,
@@ -769,7 +770,11 @@ function App() {
             <Save size={17} />
             Save
           </button>
-          <button className="primary" onClick={applyHosts} disabled={isBusy || applyBlocked}>
+          <button
+            className="primary"
+            onClick={applyHosts}
+            disabled={isBusy || applyBlocked || hostsSafetyBlocked}
+          >
             <ShieldCheck size={17} />
             Apply
           </button>
@@ -782,6 +787,8 @@ function App() {
           <strong>
             {isHoverPreviewing
               ? "Hover preview"
+              : hostsSafetyBlocked
+                ? "Hosts blocked"
               : validationIssues.length > 0
               ? `${validationIssues.length} validation error${validationIssues.length === 1 ? "" : "s"}`
               : dirty

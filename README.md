@@ -9,7 +9,7 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Groups and nodes with one active node per group by default.
 - Compact editor for creating, editing, confirmed deleting, reordering, and searching profiles.
 - Exact managed-block preview before writing `/etc/hosts`.
-- Runtime warning when the current `/etc/hosts` file is empty before applying changes.
+- Runtime warning and disabled Apply button when the current `/etc/hosts` file is empty.
 - Hover preview without mutating draft state.
 - Hosts-line validation before every Apply or status-bar switch.
 - Safe managed block that preserves unmanaged `/etc/hosts` content.
@@ -39,7 +39,7 @@ Everything outside that block is preserved. Applying changes reads the current `
 
 If the administrator prompt is cancelled or the write fails, the saved active profile state is not advanced.
 
-If the current `/etc/hosts` file is empty, Apply and status-bar switching are blocked before backup or write so the app does not replace a suspicious system hosts state.
+If the current `/etc/hosts` file is empty, the editor disables Apply and Apply/status-bar switching are blocked before backup or write so the app does not replace a suspicious system hosts state.
 
 Saved profiles, latest profile backup, and latest hosts backup are written through same-directory temporary files and atomic rename, so a crash during local persistence does not leave a half-written JSON or backup file.
 

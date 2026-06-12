@@ -136,6 +136,8 @@ assertIncludes(appTsx, "Restore profiles cancelled", "Restore profiles cancellat
 assertIncludes(appTsx, "Restore profiles backup cancelled", "Profile backup restore cancellation handling");
 assertIncludes(appTsx, "Last profiles backup restored", "Profile backup restore success handling");
 assertIncludes(appTsx, "Import cancelled", "Profile import cancellation handling");
+assertIncludes(appTsx, "hostsSafetyBlocked", "Frontend empty hosts apply guard");
+assertIncludes(appTsx, "Hosts blocked", "Frontend empty hosts blocked status");
 assertIncludes(appTsx, "deleteGroupConfirmation", "Delete group confirmation");
 assertIncludes(appTsx, "deleteNodeConfirmation", "Delete node confirmation");
 assertIncludes(systemPreferenceHydrationTs, "syncPreference(loaded)", "Startup global shortcut registration");
