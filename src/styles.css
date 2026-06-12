@@ -147,6 +147,32 @@ button:disabled {
   flex: 0 0 auto;
 }
 
+.hosts-recovery {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 12px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid #efd8aa;
+  background: #fffdf5;
+}
+
+.hosts-recovery strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #62460e;
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.hosts-recovery pre {
+  max-height: 142px;
+  border: 1px solid #ead9b4;
+  border-radius: 7px;
+  background: #fffaf0;
+  color: #342711;
+  font-size: 11px;
+}
+
 .workspace {
   min-height: 0;
   display: grid;

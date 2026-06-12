@@ -89,6 +89,12 @@ test("browser demo warns before applying when the hosts file is empty", async ({
       "Current /etc/hosts is empty. Restore a safe /etc/hosts baseline before applying changes.",
     ),
   ).toBeVisible();
+  const recoveryPanel = page.locator(".hosts-recovery");
+  await expect(recoveryPanel.getByText("Recommended default /etc/hosts")).toBeVisible();
+  await expect(recoveryPanel.getByText("127.0.0.1 localhost").first()).toBeVisible();
+  await expect(
+    recoveryPanel.getByText("sudo tee /etc/hosts >/dev/null <<'EOF'"),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: /Local API/ }).click();
   await page.getByRole("button", { name: "Inactive" }).click();

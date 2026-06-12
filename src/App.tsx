@@ -76,6 +76,24 @@ const deleteGroupConfirmation =
 const deleteNodeConfirmation =
   "Delete this node? This only changes the current draft until you save.";
 
+const defaultMacosHosts = `##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1 localhost
+255.255.255.255 broadcasthost
+::1 localhost`;
+
+const hostsRecoveryCommands = `sudo cp /etc/hosts ~/Desktop/hosts-empty-before-recovery.txt
+sudo tee /etc/hosts >/dev/null <<'EOF'
+${defaultMacosHosts}
+EOF
+sudo chmod 644 /etc/hosts
+sudo dscacheutil -flushcache
+sudo killall -HUP mDNSResponder`;
+
 function App() {
   const [state, setState] = useState<AppState>(emptyState);
   const [persisted, setPersisted] = useState<AppState>(emptyState);
@@ -800,6 +818,18 @@ function App() {
           <div className="hosts-alert" role="status">
             <TriangleAlert size={15} />
             <span>{hostsWarnings[0]}</span>
+          </div>
+        ) : null}
+        {hostsSafetyBlocked ? (
+          <div className="hosts-recovery">
+            <div>
+              <strong>Recommended default /etc/hosts</strong>
+              <pre>{defaultMacosHosts}</pre>
+            </div>
+            <div>
+              <strong>Manual recovery commands</strong>
+              <pre>{hostsRecoveryCommands}</pre>
+            </div>
           </div>
         ) : null}
       </section>
