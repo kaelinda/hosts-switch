@@ -75,6 +75,7 @@ pub fn load_app_state(app: AppHandle) -> CommandResult<AppState> {
 
 #[tauri::command]
 pub fn save_app_state(app: AppHandle, state: AppState) -> CommandResult<AppState> {
+    backup_current_profiles_if_available(&app)?;
     let saved = store::save_state(&app, &state)?;
     tray_switch::refresh_main_tray_menu(&app);
     Ok(saved)
@@ -176,7 +177,17 @@ pub fn restore_profiles_from_hosts(app: AppHandle) -> CommandResult<AppState> {
     })?;
     let managed = extract_managed_block(&current)?.unwrap_or_default();
     let restored = parse_managed_block_as_state(&managed);
+    backup_current_profiles_if_available(&app)?;
     let saved = store::save_state(&app, &restored)?;
+    tray_switch::refresh_main_tray_menu(&app);
+    Ok(saved)
+}
+
+#[tauri::command]
+pub fn restore_last_profiles_backup(app: AppHandle) -> CommandResult<AppState> {
+    let backup = store::load_profiles_backup(&app)?;
+    backup_current_profiles_if_available(&app)?;
+    let saved = store::save_state(&app, &backup)?;
     tray_switch::refresh_main_tray_menu(&app);
     Ok(saved)
 }
@@ -263,9 +274,22 @@ fn export_profiles_json(state: &AppState) -> CommandResult<String> {
 
 fn import_profiles_raw(app: &AppHandle, raw: &str) -> CommandResult<AppState> {
     let imported = parse_imported_profiles(raw)?;
+    backup_current_profiles_if_available(app)?;
     let saved = store::save_state(app, &imported)?;
     tray_switch::refresh_main_tray_menu(app);
     Ok(saved)
+}
+
+fn backup_current_profiles_if_available(app: &AppHandle) -> CommandResult<()> {
+    match store::load_state(app) {
+        Ok(current) => store::save_profiles_backup(app, &current).map(|_| ()),
+        Err(CommandError::IoWithPath { source, .. })
+            if source.kind() == std::io::ErrorKind::NotFound =>
+        {
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
 }
 
 fn parse_imported_profiles(raw: &str) -> CommandResult<AppState> {

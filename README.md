@@ -13,7 +13,8 @@ Hosts Switch is a macOS menu-bar app for managing named `/etc/hosts` profiles. I
 - Hosts-line validation before every Apply or status-bar switch.
 - Safe managed block that preserves unmanaged `/etc/hosts` content.
 - Latest `/etc/hosts` backup before Apply and confirmed backup restore.
-- Atomic local writes for saved profiles and latest hosts backup files.
+- Latest saved profiles backup before profile replacement, plus confirmed profile backup restore.
+- Atomic local writes for saved profiles, latest profile backup, and latest hosts backup files.
 - Restore editable profiles from an existing managed block.
 - Confirmed JSON file import/export for profile migration, plus browser demo copy/paste fallback.
 - Launch at login toggle backed by a macOS LaunchAgent.
@@ -36,7 +37,7 @@ If the administrator prompt is cancelled or the write fails, the saved active pr
 
 If the current `/etc/hosts` file is empty, Apply and status-bar switching are blocked before backup or write so the app does not replace a suspicious system hosts state.
 
-Saved profiles and the latest hosts backup are written through same-directory temporary files and atomic rename, so a crash during local persistence does not leave a half-written JSON or backup file.
+Saved profiles, latest profile backup, and latest hosts backup are written through same-directory temporary files and atomic rename, so a crash during local persistence does not leave a half-written JSON or backup file.
 
 ## Development
 
@@ -78,6 +79,7 @@ Current bundle outputs:
 - Status-bar tray setup and required native commands are registered.
 - Single-instance plugin is registered to focus the existing editor on a second launch.
 - Native profile import/export commands are used from the frontend.
+- Profile replacement writes a latest profiles backup and exposes a confirmed restore action.
 - WebView capabilities do not grant dialog open/save or filesystem text-file permissions.
 - The frontend does not import Tauri dialog or filesystem plugins directly.
 

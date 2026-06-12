@@ -10,6 +10,7 @@ use uuid::Uuid;
 const STORE_FILE: &str = "profiles.json";
 const BACKUP_DIR: &str = "backups";
 const LAST_HOSTS_BACKUP_FILE: &str = "hosts-last-backup";
+const LAST_PROFILES_BACKUP_FILE: &str = "profiles-last-backup.json";
 
 pub fn load_state(app: &AppHandle) -> Result<AppState, CommandError> {
     let path = state_path(app)?;
@@ -19,20 +20,39 @@ pub fn load_state(app: &AppHandle) -> Result<AppState, CommandError> {
         return Ok(state);
     }
 
+    read_state_from_path(&path)
+}
+
+pub fn save_state(app: &AppHandle, state: &AppState) -> Result<AppState, CommandError> {
+    let path = state_path(app)?;
+    write_state_to_path(&path, state)
+}
+
+pub fn save_profiles_backup(app: &AppHandle, state: &AppState) -> Result<PathBuf, CommandError> {
+    let path = profiles_backup_path(app)?;
+    write_state_to_path(&path, state)?;
+    Ok(path)
+}
+
+pub fn load_profiles_backup(app: &AppHandle) -> Result<AppState, CommandError> {
+    let path = profiles_backup_path(app)?;
+    read_state_from_path(&path)
+}
+
+fn read_state_from_path(path: &Path) -> Result<AppState, CommandError> {
     let raw = fs::read_to_string(&path).map_err(|source| CommandError::IoWithPath {
-        path: path.clone(),
+        path: path.to_path_buf(),
         source,
     })?;
     let state: AppState = serde_json::from_str(&raw).map_err(|source| CommandError::StoreJson {
-        path: path.clone(),
+        path: path.to_path_buf(),
         source,
     })?;
     Ok(normalize_state(state))
 }
 
-pub fn save_state(app: &AppHandle, state: &AppState) -> Result<AppState, CommandError> {
+fn write_state_to_path(path: &Path, state: &AppState) -> Result<AppState, CommandError> {
     let normalized = normalize_app_state(state);
-    let path = state_path(app)?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|source| CommandError::IoWithPath {
             path: parent.to_path_buf(),
@@ -41,7 +61,7 @@ pub fn save_state(app: &AppHandle, state: &AppState) -> Result<AppState, Command
     }
 
     let raw = serde_json::to_string_pretty(&normalized).map_err(CommandError::Json)?;
-    write_file_atomically(&path, raw.as_bytes())?;
+    write_file_atomically(path, raw.as_bytes())?;
     Ok(normalized)
 }
 
@@ -81,6 +101,14 @@ fn hosts_backup_path(app: &AppHandle) -> Result<PathBuf, CommandError> {
         .app_data_dir()
         .map_err(|message| CommandError::Path(message.to_string()))?;
     Ok(dir.join(BACKUP_DIR).join(LAST_HOSTS_BACKUP_FILE))
+}
+
+fn profiles_backup_path(app: &AppHandle) -> Result<PathBuf, CommandError> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|message| CommandError::Path(message.to_string()))?;
+    Ok(dir.join(BACKUP_DIR).join(LAST_PROFILES_BACKUP_FILE))
 }
 
 fn write_file_atomically(path: &Path, content: &[u8]) -> Result<(), CommandError> {
@@ -137,6 +165,7 @@ fn sync_parent_dir(path: &Path) -> Result<(), CommandError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::{HostGroup, HostNode, Preferences};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -151,6 +180,36 @@ mod tests {
         ));
         fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    fn state() -> AppState {
+        AppState {
+            version: 1,
+            preferences: Preferences {
+                enforce_one_active_per_group: true,
+                preview_on_hover: true,
+                launch_at_login: false,
+                enable_global_shortcut: true,
+            },
+            groups: vec![HostGroup {
+                id: "g1".to_string(),
+                name: "Development".to_string(),
+                nodes: vec![
+                    HostNode {
+                        id: "n1".to_string(),
+                        name: "Local".to_string(),
+                        enabled: true,
+                        content: "127.0.0.1 local.test".to_string(),
+                    },
+                    HostNode {
+                        id: "n2".to_string(),
+                        name: "Staging".to_string(),
+                        enabled: true,
+                        content: "10.0.0.1 local.test".to_string(),
+                    },
+                ],
+            }],
+        }
     }
 
     #[test]
@@ -186,6 +245,21 @@ mod tests {
             .filter(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
             .count();
         assert_eq!(temp_files, 0);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn profile_state_backup_round_trips_normalized_json() {
+        let dir = temp_dir("profile-backup");
+        let path = dir.join("backups").join("profiles-last-backup.json");
+
+        let written = write_state_to_path(&path, &state()).unwrap();
+        let restored = read_state_from_path(&path).unwrap();
+
+        assert!(written.groups[0].nodes[0].enabled);
+        assert!(!written.groups[0].nodes[1].enabled);
+        assert_eq!(restored, written);
+        assert!(fs::read_to_string(&path).unwrap().contains("\"groups\""));
         let _ = fs::remove_dir_all(dir);
     }
 }

@@ -98,6 +98,7 @@ assertIncludes(libRs, "tray_switch::show_main_window", "Status-bar editor opener
 assertIncludes(libRs, "commands::apply_hosts", "Apply hosts command registration");
 assertIncludes(libRs, "commands::export_profiles_to_file", "Native export command registration");
 assertIncludes(libRs, "commands::import_profiles_from_file", "Native import command registration");
+assertIncludes(libRs, "commands::restore_last_profiles_backup", "Profile backup restore command registration");
 assertIncludes(traySwitchRs, "const SWITCH_PREFIX: &str = \"switch-node:\"", "Status-bar switch menu IDs");
 assertIncludes(traySwitchRs, "const DISABLE_GROUP_PREFIX: &str = \"disable-group:\"", "Status-bar group disable menu IDs");
 assertIncludes(traySwitchRs, "commands::apply_hosts_state", "Status-bar switch apply path");
@@ -109,13 +110,18 @@ assertIncludes(traySwitchRs, "STALE_MENU_GROUP_MESSAGE", "Status-bar stale group
 assertIncludes(traySwitchRs, "\"hosts-switch://tray-status\"", "Status-bar switch event emission");
 assertIncludes(storeRs, "fn write_file_atomically", "Atomic profile persistence helper");
 assertIncludes(storeRs, "fs::rename(&temp_path, path)", "Atomic profile persistence rename");
+assertIncludes(storeRs, "profiles-last-backup.json", "Last profiles backup file");
 assertIncludes(apiTs, "export_profiles_to_file", "Frontend native export command call");
 assertIncludes(apiTs, "import_profiles_from_file", "Frontend native import command call");
+assertIncludes(apiTs, "restore_last_profiles_backup", "Frontend profile backup restore command call");
+assertIncludes(apiTs, "hosts-switch.browser-profile-backup", "Browser profile backup storage");
 assertIncludes(apiTs, "listen<TrayStatusEvent>(\"hosts-switch://tray-status\"", "Frontend tray status listener");
 assertIncludes(apiTs, "CommandOrControl+Shift+H", "Frontend global shortcut binding");
 assertIncludes(appTsx, "hydrateGlobalShortcutPreference", "Startup global shortcut hydration");
 assertIncludes(appTsx, "profileReplaceConfirmation", "Profile replacement confirmation");
 assertIncludes(appTsx, "Restore profiles cancelled", "Restore profiles cancellation handling");
+assertIncludes(appTsx, "Restore profiles backup cancelled", "Profile backup restore cancellation handling");
+assertIncludes(appTsx, "Last profiles backup restored", "Profile backup restore success handling");
 assertIncludes(appTsx, "Import cancelled", "Profile import cancellation handling");
 assertIncludes(appTsx, "deleteGroupConfirmation", "Delete group confirmation");
 assertIncludes(appTsx, "deleteNodeConfirmation", "Delete node confirmation");

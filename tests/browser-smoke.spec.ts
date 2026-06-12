@@ -1,17 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 const browserStoreKey = "hosts-switch.browser-state";
+const browserProfileBackupKey = "hosts-switch.browser-profile-backup";
 const browserHostsKey = "hosts-switch.browser-hosts";
 const browserHostsBackupKey = "hosts-switch.browser-hosts-backup";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    ([storeKey, hostsKey, backupKey]) => {
+    ([storeKey, profileBackupKey, hostsKey, backupKey]) => {
       window.localStorage.removeItem(storeKey);
+      window.localStorage.removeItem(profileBackupKey);
       window.localStorage.removeItem(hostsKey);
       window.localStorage.removeItem(backupKey);
     },
-    [browserStoreKey, browserHostsKey, browserHostsBackupKey],
+    [browserStoreKey, browserProfileBackupKey, browserHostsKey, browserHostsBackupKey],
   );
 });
 
@@ -167,6 +169,50 @@ test("browser demo confirms before replacing profiles from JSON import", async (
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await expect(page.getByText("Profiles imported")).toBeVisible();
   await expect(page.getByRole("button", { name: "Imported Development" })).toBeVisible();
+});
+
+test("browser demo restores the last profiles backup after replacement", async ({ page }) => {
+  await page.goto("/");
+
+  const exported = await page.getByTitle("Export profiles JSON").click().then(async () => {
+    await expect(page.getByRole("dialog")).toBeVisible();
+    return page.locator(".profile-json").inputValue();
+  });
+  const imported = JSON.parse(exported);
+  imported.groups[0].name = "Imported Development";
+  await page.getByTitle("Close").click();
+
+  await page.getByTitle("Import profiles JSON").click();
+  await page.locator(".profile-json").fill(JSON.stringify(imported));
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Replace the current profiles?");
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await expect(page.getByText("Profiles imported")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imported Development" })).toBeVisible();
+
+  const backup = await page.evaluate((backupKey) => {
+    return window.localStorage.getItem(backupKey);
+  }, browserProfileBackupKey);
+  expect(backup).toContain("Development");
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Replace the current profiles?");
+    await dialog.dismiss();
+  });
+  await page.getByTitle("Restore last profiles backup").click();
+  await expect(page.getByText("Restore profiles backup cancelled")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imported Development" })).toBeVisible();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Unsaved profile edits will be discarded");
+    await dialog.accept();
+  });
+  await page.getByTitle("Restore last profiles backup").click();
+  await expect(page.getByText("Last profiles backup restored")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Development" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imported Development" })).toHaveCount(0);
 });
 
 test("browser demo confirms before deleting nodes and groups", async ({ page }) => {

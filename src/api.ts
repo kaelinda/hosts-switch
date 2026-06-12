@@ -24,6 +24,7 @@ import {
 import type { AppState, HostsSnapshot, ValidationIssue } from "./types";
 
 const browserStoreKey = "hosts-switch.browser-state";
+const browserProfileBackupKey = "hosts-switch.browser-profile-backup";
 const browserHostsKey = "hosts-switch.browser-hosts";
 const browserHostsBackupKey = "hosts-switch.browser-hosts-backup";
 const emptyHostsApplyMessage =
@@ -70,6 +71,7 @@ export async function saveAppState(state: AppState): Promise<AppState> {
   }
 
   const normalized = normalizeState(state);
+  backupBrowserProfiles();
   window.localStorage.setItem(browserStoreKey, JSON.stringify(normalized));
   return normalized;
 }
@@ -148,6 +150,7 @@ export async function importProfiles(raw: string): Promise<AppState> {
   }
 
   const normalized = parseProfilesJson(raw);
+  backupBrowserProfiles();
   window.localStorage.setItem(browserStoreKey, JSON.stringify(normalized));
   return normalized;
 }
@@ -247,6 +250,23 @@ export async function restoreProfilesFromHosts(): Promise<AppState> {
   }
 
   const restored = parseManagedBlockAsState(extractManagedBlock(browserHosts()));
+  backupBrowserProfiles();
+  window.localStorage.setItem(browserStoreKey, JSON.stringify(restored));
+  return restored;
+}
+
+export async function restoreLastProfilesBackup(): Promise<AppState> {
+  if (isTauri) {
+    return invoke<AppState>("restore_last_profiles_backup");
+  }
+
+  const backup = window.localStorage.getItem(browserProfileBackupKey);
+  if (!backup) {
+    throw new Error("No profiles backup found.");
+  }
+
+  const restored = normalizeState(JSON.parse(backup) as AppState);
+  backupBrowserProfiles();
   window.localStorage.setItem(browserStoreKey, JSON.stringify(restored));
   return restored;
 }
@@ -279,4 +299,11 @@ export async function listenToTrayStatus(
 
 function browserHosts() {
   return window.localStorage.getItem(browserHostsKey) ?? demoHostsFile;
+}
+
+function backupBrowserProfiles() {
+  const current = window.localStorage.getItem(browserStoreKey);
+  if (current) {
+    window.localStorage.setItem(browserProfileBackupKey, current);
+  }
 }

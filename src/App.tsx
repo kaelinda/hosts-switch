@@ -39,6 +39,7 @@ import {
   readLaunchAtLoginStatus,
   readHostsSnapshot,
   restoreLastHostsBackup,
+  restoreLastProfilesBackup,
   restoreProfilesFromHosts,
   runtimeLabel,
   saveAppState,
@@ -516,6 +517,23 @@ function App() {
     });
   }
 
+  async function restoreProfilesBackup() {
+    if (!window.confirm(profileReplaceConfirmation)) {
+      setStatus("Restore profiles backup cancelled");
+      return;
+    }
+
+    await runCommand("Last profiles backup restored", async () => {
+      clearHoverPreviewState();
+      const restored = await restoreLastProfilesBackup();
+      setState(restored);
+      setPersisted(restored);
+      selectFirstNode(restored);
+      await refreshSnapshot(restored);
+      await refreshValidation(restored);
+    });
+  }
+
   async function openExportProfiles() {
     if (supportsNativeProfileFiles()) {
       await runCommand("Profiles JSON exported to file", async () => {
@@ -737,6 +755,9 @@ function App() {
           </button>
           <button className="icon-button" onClick={restoreProfiles} disabled={isBusy} title="Restore profiles from /etc/hosts">
             <FileClock size={17} />
+          </button>
+          <button className="icon-button" onClick={restoreProfilesBackup} disabled={isBusy} title="Restore last profiles backup">
+            <TimerReset size={17} />
           </button>
           <button className="icon-button" onClick={restoreLastBackup} disabled={isBusy} title="Restore last hosts backup">
             <ArchiveRestore size={17} />

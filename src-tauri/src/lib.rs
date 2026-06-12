@@ -35,6 +35,7 @@ pub fn run() {
             commands::apply_hosts,
             commands::restore_managed_block,
             commands::restore_profiles_from_hosts,
+            commands::restore_last_profiles_backup,
             commands::restore_last_hosts_backup
         ])
         .run(tauri::generate_context!())
